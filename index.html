@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>แบบทดสอบ</title>
+  <title>กำลังโหลด...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Bootstrap & SweetAlert -->
@@ -12,28 +12,33 @@
   <style>
     body { background-color: #f5f5f5; padding: 2rem; }
     .container { max-width: 800px; }
+    .logo { max-height: 80px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2 class="mb-4">แบบทดสอบ</h2>
-    <form id="quizForm">
+    <div class="text-center mb-4">
+      <img id="logo" src="" alt="Logo" class="logo mb-2 d-none">
+      <h2 id="siteTitle">แบบทดสอบ</h2>
+    </div>
+
+    <form id="quizForm" class="d-none">
       <div class="mb-3">
         <label class="form-label">ชื่อ - สกุล</label>
         <input type="text" class="form-control" name="name" required>
       </div>
       <div id="questionArea"></div>
-      <button type="submit" class="btn btn-success mt-3">📤 ส่งคำตอบ</button>
+      <button type="submit" class="btn btn-primary mt-3">ส่งคำตอบ</button>
     </form>
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxxwqbBal-JDeE7T3TKlWHbYndTeVTsF5jVIJwknGTf6SZl-RyosyWTGEheP6v6GVRygA/exec'; // ← ใส่ Script ของคุณ
     const params = new URLSearchParams(window.location.search);
     const formID = params.get("form");
+    let config = {};
     let questions = [];
+    let screenshots = [];
 
-    // ฟังก์ชันแฮช SHA-256
     async function sha256(text) {
       const msgUint8 = new TextEncoder().encode(text);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -41,16 +46,30 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // โหลดคำถามจากฟอร์ม
+    async function loadConfig() {
+      const res = await fetch("config.json");
+      config = await res.json();
+
+      document.title = config.siteName || "แบบทดสอบ";
+      document.getElementById("siteTitle").textContent = config.siteName || "แบบทดสอบ";
+
+      if (config.logo) {
+        const logo = document.getElementById("logo");
+        logo.src = config.logo;
+        logo.classList.remove("d-none");
+      }
+    }
+
     async function loadForm() {
       if (!formID) {
-        Swal.fire("ไม่พบลิงก์", "กรุณาเปิดแบบฟอร์มผ่านลิงก์ที่ถูกต้อง", "error");
+        Swal.fire("ลิงก์ไม่ถูกต้อง", "กรุณาเปิดแบบฟอร์มผ่านลิงก์ที่ถูกต้อง", "error");
         return;
       }
-      const res = await fetch(`${scriptURL}?action=getForm&form=${formID}`);
+
+      const res = await fetch(`${config.scriptURL}?action=getForm&form=${formID}`);
       const data = await res.json();
       if (!data.success) {
-        Swal.fire("แบบฟอร์มไม่ถูกต้อง", data.message, "error");
+        Swal.fire("ไม่พบแบบฟอร์ม", data.message || "ลิงก์นี้อาจหมดอายุหรือถูกลบ", "error");
         return;
       }
 
@@ -65,12 +84,11 @@
         `;
       });
 
-      Swal.fire("ตรวจสอบ", "กรุณาแชร์ทั้งหน้าจอเพื่อป้องกันการโกง", "info");
+      document.getElementById("quizForm").classList.remove("d-none");
+      Swal.fire("กรุณาแชร์หน้าจอ", "ระบบจะจับภาพหน้าจอเป็นระยะเพื่อตรวจสอบความโปร่งใส", "info");
       await startScreenCapture();
     }
 
-    // แชร์หน้าจอ + บันทึกภาพ
-    let screenshots = [];
     async function startScreenCapture() {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
@@ -88,27 +106,25 @@
           screenshots.push(canvas.toDataURL("image/jpeg"));
         }, 10000);
       } catch (err) {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถจับหน้าจอได้", "error");
+        Swal.fire("ไม่สามารถจับหน้าจอได้", "กรุณาอนุญาตให้แชร์หน้าจอ", "error");
       }
     }
 
-    // เมื่อส่งคำตอบ
     document.getElementById("quizForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
-      const name = formData.get("name");
-      const answers = questions.map((_, i) => formData.get(`q${i}`));
+      const name = formData.get("name").trim();
+      const answers = questions.map((_, i) => formData.get(`q${i}`).trim());
 
       if (!name || answers.some(ans => !ans)) {
-        return Swal.fire("กรุณากรอกให้ครบ", "", "warning");
+        return Swal.fire("กรุณากรอกข้อมูลให้ครบ", "", "warning");
       }
 
-      // แฮชข้อมูลก่อนส่ง
       const nameHash = await sha256(name);
       const answerHashes = await Promise.all(answers.map(ans => sha256(ans)));
-      const screenshotsHashed = await Promise.all(
-        screenshots.map(s => sha256(s.slice(0, 100)))
+      const screenshotsHash = await Promise.all(
+        screenshots.map(img => sha256(img.slice(0, 100)))
       );
 
       const payload = {
@@ -116,24 +132,25 @@
         formID,
         name: nameHash,
         answers: answerHashes,
-        screenshots: screenshotsHashed,
+        screenshots: screenshotsHash
       };
 
-      const res = await fetch(scriptURL, {
+      const res = await fetch(config.scriptURL, {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       const result = await res.json();
       if (result.success) {
-        Swal.fire("ส่งสำเร็จ", "คำตอบของคุณถูกบันทึกแล้ว", "success");
+        Swal.fire("ส่งคำตอบสำเร็จ", "ขอบคุณสำหรับการทำแบบฟอร์ม", "success");
         form.reset();
       } else {
-        Swal.fire("ล้มเหลว", "เกิดข้อผิดพลาดในการส่ง", "error");
+        Swal.fire("ล้มเหลว", "ไม่สามารถส่งคำตอบได้", "error");
       }
     });
 
-    loadForm();
+    // เริ่มโหลดทุกอย่าง
+    loadConfig().then(loadForm);
   </script>
 </body>
 </html>
