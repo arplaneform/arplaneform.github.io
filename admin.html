@@ -1,355 +1,197 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <title>เข้าสู่ระบบ Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <style>
-    body {
-      background-color: #f5f5f5;
-      padding: 2rem;
-    }
-
-    .container {
-      max-width: 600px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin - ระบบจัดการแบบทดสอบ</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+  #adminPanel { display:none; }
+</style>
 </head>
-<body>
-  <div class="container">
-    <h2 class="mb-4 text-center">เข้าสู่ระบบ Admin</h2>
+<body class="bg-light">
 
-    <!-- หน้า Login -->
-    <form id="loginForm">
+<div class="container my-5">
+  <h1 class="mb-4">ระบบจัดการแบบทดสอบ (Admin)</h1>
+
+  <div id="loginPanel">
+    <form id="loginForm" class="card p-4 shadow-sm">
       <div class="mb-3">
-        <label for="usernameInput" class="form-label">ชื่อผู้ใช้</label>
-        <input
-          type="text"
-          id="usernameInput"
-          class="form-control"
-          required
-          autocomplete="username"
-        />
+        <label for="username" class="form-label">ชื่อผู้ใช้</label>
+        <input type="text" class="form-control" id="username" required />
       </div>
       <div class="mb-3">
-        <label for="passwordInput" class="form-label">รหัสผ่าน</label>
-        <input
-          type="password"
-          id="passwordInput"
-          class="form-control"
-          required
-          autocomplete="current-password"
-        />
+        <label for="password" class="form-label">รหัสผ่าน</label>
+        <input type="password" class="form-control" id="password" required />
       </div>
-      <button type="submit" class="btn btn-primary w-100">เข้าสู่ระบบ</button>
+      <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
     </form>
-
-    <!-- หน้า Admin Panel -->
-    <div id="adminPanel" class="d-none">
-      <h3 class="mb-3">สร้างแบบฟอร์มใหม่</h3>
-
-      <form id="formBuilder">
-        <div class="mb-3">
-          <label for="formTitleInput" class="form-label">ชื่อแบบฟอร์ม</label>
-          <input
-            type="text"
-            id="formTitleInput"
-            class="form-control"
-            required
-            placeholder="ชื่อแบบฟอร์ม"
-          />
-        </div>
-
-        <div id="questionsArea"></div>
-
-        <button type="button" class="btn btn-secondary mb-3" id="addQuestionBtn">
-          เพิ่มคำถาม
-        </button>
-
-        <button type="submit" class="btn btn-success">สร้างแบบฟอร์ม</button>
-      </form>
-
-      <div id="linkResult" class="mt-3"></div>
-
-      <button class="btn btn-danger mt-4" id="logoutBtn">ออกจากระบบ</button>
-    </div>
   </div>
 
-  <script>
-    let config = {};
-    let loggedIn = false;
+  <div id="adminPanel">
+    <button id="logoutBtn" class="btn btn-danger mb-3">ออกจากระบบ</button>
 
-    async function loadConfig() {
-      try {
-        const res = await fetch("config.json");
-        config = await res.json();
-        if (!config.scriptURL) throw new Error("scriptURL ไม่ถูกกำหนดใน config.json");
-      } catch (e) {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่พบไฟล์ config.json หรือ config ผิดพลาด", "error");
-        throw e;
+    <h3>คำตอบที่ส่งมา</h3>
+    <table class="table table-bordered" id="answersTable">
+      <thead>
+        <tr><th>ชื่อผู้ใช้</th><th>คำตอบ</th><th>วิดีโอหน้าจอ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h3>จัดการแบบฟอร์ม</h3>
+    <button id="createLinkBtn" class="btn btn-success mb-3">สร้างลิงก์ฟอร์มใหม่</button>
+
+    <div id="newLinkContainer"></div>
+
+    <!-- ฟอร์มแก้ไขคำถาม (ตัวอย่างง่าย ๆ) -->
+    <h4>แก้ไขคำถาม (JSON)</h4>
+    <textarea id="questionsJson" class="form-control" rows="10"></textarea>
+    <button id="saveQuestionsBtn" class="btn btn-primary mt-2">บันทึกคำถาม</button>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/your_script_id/exec";
+  const SECRET_KEY = "my_secret_key"; // ต้องเหมือนกับ client
+
+  function xorDecrypt(str, key) {
+    return atob(str).split('').map((ch, i) =>
+      String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+    ).join('');
+  }
+
+  // ระบบ Login ง่าย ๆ
+  document.getElementById("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if(!username || !password) {
+      Swal.fire("กรุณากรอกข้อมูลให้ครบ","warning");
+      return;
+    }
+
+    // ส่งไปเช็คที่ Apps Script ว่าถูกไหม
+    const res = await fetch(SCRIPT_URL + "?action=adminLogin", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if(data.success) {
+      Swal.fire("เข้าสู่ระบบสำเร็จ", "", "success");
+      document.getElementById("loginPanel").style.display = "none";
+      document.getElementById("adminPanel").style.display = "block";
+      loadAnswers();
+    } else {
+      Swal.fire("เข้าสู่ระบบไม่สำเร็จ", data.message || "ข้อมูลไม่ถูกต้อง", "error");
+    }
+  });
+
+  // โหลดคำตอบจาก Sheet ผ่าน Apps Script
+  async function loadAnswers() {
+    const res = await fetch(SCRIPT_URL + "?action=getAnswers");
+    const data = await res.json();
+    if(!data.success) {
+      Swal.fire("โหลดคำตอบล้มเหลว", data.message || "", "error");
+      return;
+    }
+
+    const tbody = document.querySelector("#answersTable tbody");
+    tbody.innerHTML = "";
+
+    data.answers.forEach(item => {
+      // ถอดรหัส username และ answers
+      const username = xorDecrypt(item.usernameEncrypted, SECRET_KEY);
+      const answers = JSON.parse(xorDecrypt(item.answersEncrypted, SECRET_KEY));
+
+      // สร้าง row
+      const tr = document.createElement("tr");
+      const tdUser = document.createElement("td");
+      tdUser.textContent = username;
+
+      const tdAnswers = document.createElement("td");
+      tdAnswers.innerHTML = Object.entries(answers).map(([k,v]) => `<b>${k}</b>: ${v}`).join("<br>");
+
+      const tdVideo = document.createElement("td");
+      if(item.videoUrl) {
+        const a = document.createElement("a");
+        a.href = item.videoUrl;
+        a.textContent = "ดูวิดีโอ";
+        a.target = "_blank";
+        tdVideo.appendChild(a);
+      } else {
+        tdVideo.textContent = "-";
       }
-    }
 
-    async function sha256(text) {
-      const msgUint8 = new TextEncoder().encode(text);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    }
+      tr.appendChild(tdUser);
+      tr.appendChild(tdAnswers);
+      tr.appendChild(tdVideo);
+      tbody.appendChild(tr);
+    });
+  }
 
-    // ฟังก์ชันเพิ่มคำถาม
-    function addQuestion(q = { type: "text", question: "", options: [] }) {
-      const area = document.getElementById("questionsArea");
-      const count = area.children.length + 1;
+  // ออกจากระบบ
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    document.getElementById("adminPanel").style.display = "none";
+    document.getElementById("loginPanel").style.display = "block";
+  });
 
-      const div = document.createElement("div");
-      div.className = "mb-3 border p-3 rounded";
-      div.dataset.index = count - 1;
-
-      div.innerHTML = `
-        <label class="form-label">คำถามที่ ${count}</label>
-        <input type="text" class="form-control mb-2 question-text" placeholder="ข้อความคำถาม" required value="${q.question}" />
-
-        <select class="form-select mb-2 question-type" required>
-          <option value="text" ${q.type === "text" ? "selected" : ""}>คำถามแบบอัตนัย (ข้อความ)</option>
-          <option value="choice" ${q.type === "choice" ? "selected" : ""}>คำถามแบบปรนัย (ตัวเลือก)</option>
-        </select>
-
-        <div class="options-area mb-2" style="display: ${
-          q.type === "choice" ? "block" : "none"
-        };">
-          <label>ตัวเลือก:</label>
-          <div class="options-list"></div>
-          <button type="button" class="btn btn-sm btn-outline-secondary mt-2 add-option-btn">เพิ่มตัวเลือก</button>
+  // สร้างลิงก์ฟอร์มสุ่ม
+  document.getElementById("createLinkBtn").addEventListener("click", async () => {
+    // สุ่ม id ง่ายๆ
+    const newFormID = Math.random().toString(36).slice(2,10);
+    // บันทึกที่ Apps Script
+    const res = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ action: "createForm", formID: newFormID })
+    });
+    const data = await res.json();
+    if(data.success) {
+      const url = `${location.origin}/index.html?formID=${newFormID}`;
+      document.getElementById("newLinkContainer").innerHTML = `
+        <div class="alert alert-success">
+          สร้างลิงก์ฟอร์มใหม่: <a href="${url}" target="_blank">${url}</a>
+          <button class="btn btn-sm btn-outline-primary ms-2" onclick="navigator.clipboard.writeText('${url}')">คัดลอกลิงก์</button>
         </div>
-
-        <button type="button" class="btn btn-sm btn-danger remove-question-btn mt-2">ลบคำถาม</button>
       `;
+    } else {
+      Swal.fire("สร้างลิงก์ไม่สำเร็จ", data.message || "", "error");
+    }
+  });
 
-      area.appendChild(div);
-
-      if (q.type === "choice" && Array.isArray(q.options)) {
-        const optionsList = div.querySelector(".options-list");
-        q.options.forEach((opt) => {
-          addOption(optionsList, opt);
-        });
+  // บันทึกคำถาม (แก้ไข) - สมมติ JSON format
+  document.getElementById("saveQuestionsBtn").addEventListener("click", async () => {
+    const jsonText = document.getElementById("questionsJson").value.trim();
+    if (!jsonText) {
+      Swal.fire("กรุณากรอกคำถามในรูปแบบ JSON", "", "warning");
+      return;
+    }
+    try {
+      const questions = JSON.parse(jsonText);
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+          action: "updateQuestions",
+          questions
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire("บันทึกคำถามสำเร็จ", "", "success");
+      } else {
+        Swal.fire("บันทึกคำถามล้มเหลว", data.message || "", "error");
       }
-
-      div.querySelector(".question-type").addEventListener("change", (e) => {
-        const val = e.target.value;
-        const optionsArea = div.querySelector(".options-area");
-        if (val === "choice") {
-          optionsArea.style.display = "block";
-          const optionsList = optionsArea.querySelector(".options-list");
-          if (optionsList.children.length === 0) {
-            addOption(optionsList, "");
-            addOption(optionsList, "");
-          }
-        } else {
-          optionsArea.style.display = "none";
-        }
-      });
-
-      div.querySelector(".add-option-btn").addEventListener("click", (e) => {
-        e.preventDefault();
-        const optionsList = div.querySelector(".options-list");
-        addOption(optionsList, "");
-      });
-
-      div.querySelector(".remove-question-btn").addEventListener("click", () => {
-        div.remove();
-        updateQuestionLabels();
-      });
+    } catch {
+      Swal.fire("รูปแบบ JSON ไม่ถูกต้อง", "", "error");
     }
+  });
+</script>
 
-    function addOption(container, value) {
-      const div = document.createElement("div");
-      div.className = "input-group mb-1";
-
-      div.innerHTML = `
-        <input type="text" class="form-control option-input" placeholder="ตัวเลือก" required value="${value}" />
-        <button class="btn btn-outline-danger btn-sm remove-option-btn" type="button">ลบ</button>
-      `;
-
-      container.appendChild(div);
-
-      div.querySelector(".remove-option-btn").addEventListener("click", () => {
-        div.remove();
-      });
-    }
-
-    function updateQuestionLabels() {
-      const questions = document.querySelectorAll("#questionsArea > div");
-      questions.forEach((div, i) => {
-        div.dataset.index = i;
-        div.querySelector("label.form-label").textContent = `คำถามที่ ${i + 1}`;
-      });
-    }
-
-    async function login(username, password) {
-      const passwordHash = await sha256(password);
-
-      try {
-        const res = await fetch(
-          `${config.scriptURL}?action=checkLogin&username=${encodeURIComponent(
-            username
-          )}&passwordHash=${passwordHash}`
-        );
-        const data = await res.json();
-
-        if (data.success) {
-          loggedIn = true;
-          Swal.fire("เข้าสู่ระบบสำเร็จ", "", "success");
-          document.getElementById("loginForm").classList.add("d-none");
-          document.getElementById("adminPanel").classList.remove("d-none");
-
-          if (document.getElementById("questionsArea").children.length === 0) {
-            addQuestion();
-          }
-        } else {
-          Swal.fire("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง", "", "error");
-        }
-      } catch {
-        Swal.fire("เกิดข้อผิดพลาดในการเชื่อมต่อ", "", "error");
-      }
-    }
-
-    // โหลด config.json แล้วผูก event
-    loadConfig()
-      .then(() => {
-        document
-          .getElementById("loginForm")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (loggedIn) return;
-
-            const username = document
-              .getElementById("usernameInput")
-              .value.trim();
-            const password = document
-              .getElementById("passwordInput")
-              .value.trim();
-
-            if (!username || !password) {
-              Swal.fire("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน", "", "warning");
-              return;
-            }
-
-            await login(username, password);
-          });
-
-        document
-          .getElementById("formBuilder")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            if (!loggedIn) {
-              Swal.fire("กรุณาเข้าสู่ระบบก่อน", "", "warning");
-              return;
-            }
-
-            const title = document
-              .getElementById("formTitleInput")
-              .value.trim();
-            if (!title) {
-              Swal.fire("กรุณากรอกชื่อแบบฟอร์ม", "", "warning");
-              return;
-            }
-
-            const questionsDivs = document.querySelectorAll(
-              "#questionsArea > div"
-            );
-            if (questionsDivs.length === 0) {
-              Swal.fire("กรุณาเพิ่มคำถามอย่างน้อย 1 ข้อ", "", "warning");
-              return;
-            }
-
-            const questions = [];
-            for (const div of questionsDivs) {
-              const qText = div.querySelector(".question-text").value.trim();
-              if (!qText) {
-                Swal.fire("กรุณากรอกข้อความคำถามให้ครบถ้วน", "", "warning");
-                return;
-              }
-              const qType = div.querySelector(".question-type").value;
-
-              let qObj = {
-                type: qType,
-                question: qText,
-              };
-
-              if (qType === "choice") {
-                const optionInputs = div.querySelectorAll(".option-input");
-                const opts = Array.from(optionInputs)
-                  .map((input) => input.value.trim())
-                  .filter((v) => v.length > 0);
-
-                if (opts.length < 2) {
-                  Swal.fire(
-                    "คำถามแบบปรนัยต้องมีตัวเลือกอย่างน้อย 2 ตัว",
-                    "",
-                    "warning"
-                  );
-                  return;
-                }
-                qObj.options = opts;
-              }
-
-              questions.push(qObj);
-            }
-
-            try {
-              const res = await fetch(config.scriptURL, {
-                method: "POST",
-                body: JSON.stringify({
-                  action: "createForm",
-                  title,
-                  questions,
-                }),
-              });
-              const result = await res.json();
-
-              if (result.success) {
-                document.getElementById("linkResult").innerHTML = `
-                <div class="alert alert-success">
-                  ลิงก์แบบฟอร์มของคุณคือ:<br />
-                  <a href="index.html?form=${result.formID}" target="_blank" rel="noopener noreferrer">เปิดแบบฟอร์ม</a>
-                </div>`;
-                Swal.fire("สร้างแบบฟอร์มสำเร็จ", "", "success");
-              } else {
-                Swal.fire("ไม่สามารถสร้างแบบฟอร์มได้", "", "error");
-              }
-            } catch {
-              Swal.fire("เกิดข้อผิดพลาดในการเชื่อมต่อ", "", "error");
-            }
-          });
-
-        document
-          .getElementById("addQuestionBtn")
-          .addEventListener("click", () => addQuestion());
-
-        document
-          .getElementById("logoutBtn")
-          .addEventListener("click", () => {
-            loggedIn = false;
-            document.getElementById("adminPanel").classList.add("d-none");
-            document.getElementById("loginForm").classList.remove("d-none");
-            document.getElementById("loginForm").reset();
-            document.getElementById("formTitleInput").value = "";
-            document.getElementById("questionsArea").innerHTML = "";
-            document.getElementById("linkResult").innerHTML = "";
-          });
-      })
-      .catch(() => {
-        document.getElementById("loginForm").style.display = "none";
-      });
-  </script>
 </body>
 </html>
