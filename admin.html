@@ -25,7 +25,7 @@
         <label for="password" class="form-label">รหัสผ่าน</label>
         <input type="password" class="form-control" id="password" required />
       </div>
-      <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <button type="submit" class="btn btn-primary" id="loginBtn">เข้าสู่ระบบ</button>
     </form>
   </div>
 
@@ -45,7 +45,6 @@
 
     <div id="newLinkContainer"></div>
 
-    <!-- ฟอร์มแก้ไขคำถาม (ตัวอย่างง่าย ๆ) -->
     <h4>แก้ไขคำถาม (JSON)</h4>
     <textarea id="questionsJson" class="form-control" rows="10"></textarea>
     <button id="saveQuestionsBtn" class="btn btn-primary mt-2">บันทึกคำถาม</button>
@@ -53,144 +52,178 @@
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/your_script_id/exec";
-  const SECRET_KEY = "my_secret_key"; // ต้องเหมือนกับ client
-
-  function xorDecrypt(str, key) {
-    return atob(str).split('').map((ch, i) =>
-      String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-    ).join('');
-  }
-
-  // ระบบ Login ง่าย ๆ
-  document.getElementById("loginForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    if(!username || !password) {
-      Swal.fire("กรุณากรอกข้อมูลให้ครบ","warning");
-      return;
-    }
-
-    // ส่งไปเช็คที่ Apps Script ว่าถูกไหม
-    const res = await fetch(SCRIPT_URL + "?action=adminLogin", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-
-    if(data.success) {
-      Swal.fire("เข้าสู่ระบบสำเร็จ", "", "success");
-      document.getElementById("loginPanel").style.display = "none";
-      document.getElementById("adminPanel").style.display = "block";
-      loadAnswers();
-    } else {
-      Swal.fire("เข้าสู่ระบบไม่สำเร็จ", data.message || "ข้อมูลไม่ถูกต้อง", "error");
-    }
-  });
-
-  // โหลดคำตอบจาก Sheet ผ่าน Apps Script
-  async function loadAnswers() {
-    const res = await fetch(SCRIPT_URL + "?action=getAnswers");
-    const data = await res.json();
-    if(!data.success) {
-      Swal.fire("โหลดคำตอบล้มเหลว", data.message || "", "error");
-      return;
-    }
-
-    const tbody = document.querySelector("#answersTable tbody");
-    tbody.innerHTML = "";
-
-    data.answers.forEach(item => {
-      // ถอดรหัส username และ answers
-      const username = xorDecrypt(item.usernameEncrypted, SECRET_KEY);
-      const answers = JSON.parse(xorDecrypt(item.answersEncrypted, SECRET_KEY));
-
-      // สร้าง row
-      const tr = document.createElement("tr");
-      const tdUser = document.createElement("td");
-      tdUser.textContent = username;
-
-      const tdAnswers = document.createElement("td");
-      tdAnswers.innerHTML = Object.entries(answers).map(([k,v]) => `<b>${k}</b>: ${v}`).join("<br>");
-
-      const tdVideo = document.createElement("td");
-      if(item.videoUrl) {
-        const a = document.createElement("a");
-        a.href = item.videoUrl;
-        a.textContent = "ดูวิดีโอ";
-        a.target = "_blank";
-        tdVideo.appendChild(a);
-      } else {
-        tdVideo.textContent = "-";
-      }
-
-      tr.appendChild(tdUser);
-      tr.appendChild(tdAnswers);
-      tr.appendChild(tdVideo);
-      tbody.appendChild(tr);
-    });
-  }
-
-  // ออกจากระบบ
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    document.getElementById("adminPanel").style.display = "none";
-    document.getElementById("loginPanel").style.display = "block";
-  });
-
-  // สร้างลิงก์ฟอร์มสุ่ม
-  document.getElementById("createLinkBtn").addEventListener("click", async () => {
-    // สุ่ม id ง่ายๆ
-    const newFormID = Math.random().toString(36).slice(2,10);
-    // บันทึกที่ Apps Script
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ action: "createForm", formID: newFormID })
-    });
-    const data = await res.json();
-    if(data.success) {
-      const url = `${location.origin}/index.html?formID=${newFormID}`;
-      document.getElementById("newLinkContainer").innerHTML = `
-        <div class="alert alert-success">
-          สร้างลิงก์ฟอร์มใหม่: <a href="${url}" target="_blank">${url}</a>
-          <button class="btn btn-sm btn-outline-primary ms-2" onclick="navigator.clipboard.writeText('${url}')">คัดลอกลิงก์</button>
-        </div>
-      `;
-    } else {
-      Swal.fire("สร้างลิงก์ไม่สำเร็จ", data.message || "", "error");
-    }
-  });
-
-  // บันทึกคำถาม (แก้ไข) - สมมติ JSON format
-  document.getElementById("saveQuestionsBtn").addEventListener("click", async () => {
-    const jsonText = document.getElementById("questionsJson").value.trim();
-    if (!jsonText) {
-      Swal.fire("กรุณากรอกคำถามในรูปแบบ JSON", "", "warning");
-      return;
-    }
+  // โหลด config.json
+  async function loadConfig() {
     try {
-      const questions = JSON.parse(jsonText);
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({
-          action: "updateQuestions",
-          questions
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        Swal.fire("บันทึกคำถามสำเร็จ", "", "success");
-      } else {
-        Swal.fire("บันทึกคำถามล้มเหลว", data.message || "", "error");
-      }
-    } catch {
-      Swal.fire("รูปแบบ JSON ไม่ถูกต้อง", "", "error");
+      const res = await fetch('/config.json');
+      if (!res.ok) throw new Error('ไม่สามารถโหลด config.json ได้');
+      const config = await res.json();
+      return config;
+    } catch (err) {
+      console.error(err);
+      await Swal.fire('โหลดการตั้งค่าล้มเหลว', '', 'error');
+      throw err;
     }
-  });
+  }
+
+  // ฟังก์ชันถอดรหัส XOR base64
+  function xorDecrypt(str, key) {
+    try {
+      return atob(str).split('').map((ch, i) =>
+        String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join('');
+    } catch {
+      return str; // ถ้าผิดพลาด คืนค่าเดิม
+    }
+  }
+
+  (async () => {
+    const config = await loadConfig();
+    const SCRIPT_URL = config.SCRIPT_URL;
+    const SECRET_KEY = config.SECRET_KEY;
+
+    // ฟังก์ชันเรียก API POST
+    async function postAPI(data) {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    }
+
+    // ฟังก์ชันเรียก API GET
+    async function getAPI(params) {
+      const url = new URL(SCRIPT_URL);
+      Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
+      const res = await fetch(url);
+      return res.json();
+    }
+
+    // ระบบ Login
+    document.getElementById('loginForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      if (!username || !password) {
+        Swal.fire('กรุณากรอกข้อมูลให้ครบ', '', 'warning');
+        return;
+      }
+
+      Swal.showLoading();
+      const data = await postAPI({action: 'adminLogin', username, password});
+      Swal.close();
+
+      if (data.success) {
+        Swal.fire('เข้าสู่ระบบสำเร็จ', '', 'success');
+        document.getElementById('loginPanel').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadAnswers();
+      } else {
+        Swal.fire('เข้าสู่ระบบไม่สำเร็จ', data.message || '', 'error');
+      }
+    });
+
+    // โหลดคำตอบมาแสดง
+    async function loadAnswers() {
+      const data = await getAPI({action: 'getAnswers'});
+      if (!data.success) {
+        Swal.fire('โหลดคำตอบล้มเหลว', data.message || '', 'error');
+        return;
+      }
+
+      const tbody = document.querySelector('#answersTable tbody');
+      tbody.innerHTML = '';
+
+      data.answers.forEach(item => {
+        const username = xorDecrypt(item.usernameEncrypted, SECRET_KEY);
+        let answers;
+        try {
+          answers = JSON.parse(xorDecrypt(item.answersEncrypted, SECRET_KEY));
+        } catch {
+          answers = {};
+        }
+        const tr = document.createElement('tr');
+
+        const tdUser = document.createElement('td');
+        tdUser.textContent = username;
+
+        const tdAnswers = document.createElement('td');
+        tdAnswers.innerHTML = Object.entries(answers).map(([k,v]) => `<b>${k}</b>: ${v}`).join('<br>');
+
+        const tdVideo = document.createElement('td');
+        if (item.videoUrl) {
+          const a = document.createElement('a');
+          a.href = item.videoUrl;
+          a.textContent = 'ดูวิดีโอ';
+          a.target = '_blank';
+          tdVideo.appendChild(a);
+        } else {
+          tdVideo.textContent = '-';
+        }
+
+        tr.appendChild(tdUser);
+        tr.appendChild(tdAnswers);
+        tr.appendChild(tdVideo);
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ออกจากระบบ
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('loginPanel').style.display = 'block';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    });
+
+    // สร้างลิงก์ฟอร์มใหม่
+    document.getElementById('createLinkBtn').addEventListener('click', async () => {
+      const newFormID = Math.random().toString(36).slice(2,10);
+      const data = await postAPI({action: 'createForm', formID: newFormID});
+      if (data.success) {
+        const url = `${location.origin}/index.html?formID=${newFormID}`;
+        document.getElementById('newLinkContainer').innerHTML = `
+          <div class="alert alert-success">
+            สร้างลิงก์ฟอร์มใหม่: <a href="${url}" target="_blank">${url}</a>
+            <button class="btn btn-sm btn-outline-primary ms-2" onclick="navigator.clipboard.writeText('${url}')">คัดลอกลิงก์</button>
+          </div>
+        `;
+      } else {
+        Swal.fire('สร้างลิงก์ไม่สำเร็จ', data.message || '', 'error');
+      }
+    });
+
+    // โหลดคำถามปัจจุบันในฟอร์มแรก เพื่อแก้ไข
+    async function loadQuestions() {
+      const res = await getAPI({action: 'getForm', formID: ''});
+      if (res.success) {
+        document.getElementById('questionsJson').value = JSON.stringify(res.questions, null, 2);
+      }
+    }
+    await loadQuestions();
+
+    // บันทึกคำถามที่แก้ไข
+    document.getElementById('saveQuestionsBtn').addEventListener('click', async () => {
+      const jsonText = document.getElementById('questionsJson').value.trim();
+      if (!jsonText) {
+        Swal.fire('กรุณากรอกคำถามในรูปแบบ JSON', '', 'warning');
+        return;
+      }
+      try {
+        const questions = JSON.parse(jsonText);
+        const data = await postAPI({action: 'updateQuestions', questions});
+        if (data.success) {
+          Swal.fire('บันทึกคำถามสำเร็จ', '', 'success');
+        } else {
+          Swal.fire('บันทึกคำถามล้มเหลว', data.message || '', 'error');
+        }
+      } catch {
+        Swal.fire('รูปแบบ JSON ไม่ถูกต้อง', '', 'error');
+      }
+    });
+
+  })();
 </script>
 
 </body>
