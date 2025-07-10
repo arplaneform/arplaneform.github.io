@@ -1,7 +1,6 @@
 {
   "SCRIPT_URL": "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
   "SECRET_KEY": "ThisIsOneOfArplaneProduct11002",
-  "DEFAULT_FORM_ID": "form1",
   "SHEET_NAMES": {
     "USERS": "Users",
     "FORMS": "Forms",
