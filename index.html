@@ -2,206 +2,194 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>กำลังโหลด...</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Bootstrap & SweetAlert -->
+  <title>แบบทดสอบออนไลน์</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <style>
-    body {
-      background-color: #f5f5f5;
-      padding: 2rem;
-    }
-
-    .container {
-      max-width: 800px;
-    }
-
-    .logo {
-      max-height: 80px;
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
+<body class="bg-light">
+
+  <div class="container my-5">
     <div class="text-center mb-4">
-      <img id="logo" src="" alt="Logo" class="logo mb-2 d-none" />
-      <h2 id="siteTitle">แบบทดสอบ</h2>
+      <h1 id="formTitle">กำลังโหลด...</h1>
     </div>
 
-    <form id="quizForm" class="d-none">
-      <div class="mb-3">
-        <label for="nameInput" class="form-label">ชื่อ - สกุล</label>
-        <input type="text" id="nameInput" class="form-control" name="name" required />
+    <form id="quizForm" class="card p-4 shadow-sm" style="display: none;">
+      <div id="questionsContainer"></div>
+      <div class="mt-4 d-flex justify-content-between">
+        <button type="button" id="startRecBtn" class="btn btn-danger">เริ่มทำแบบทดสอบ (แชร์หน้าจอ)</button>
+        <button type="submit" class="btn btn-primary">ส่งคำตอบ</button>
       </div>
-      <div id="questionArea"></div>
-      <button type="submit" class="btn btn-primary mt-3">ส่งคำตอบ</button>
     </form>
+
+    <div class="mt-4" id="recordingPreview" style="display: none;">
+      <h5>วิดีโอหน้าจอของคุณ:</h5>
+      <video id="recordedVideo" width="100%" controls></video>
+    </div>
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const formID = params.get("form");
-    let config = {};
-    let questions = [];
-    let screenshots = [];
+    let CONFIG = {};
+    let mediaRecorder, recordedChunks = [];
 
-    async function sha256(text) {
-      const msgUint8 = new TextEncoder().encode(text);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function xorEncrypt(str, key) {
+      return btoa([...str].map((ch, i) =>
+        String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+      ).join(""));
     }
 
     async function loadConfig() {
       try {
         const res = await fetch("config.json");
-        config = await res.json();
+        CONFIG = await res.json();
 
-        document.title = config.siteName || "แบบทดสอบ";
-        document.getElementById("siteTitle").textContent = config.siteName || "แบบทดสอบ";
-
-        if (config.logo) {
-          const logo = document.getElementById("logo");
-          logo.src = config.logo;
-          logo.classList.remove("d-none");
-        }
-      } catch {
-        // กรณีโหลด config.json ไม่สำเร็จ ใช้ค่าเริ่มต้น
-      }
-    }
-
-    async function loadForm() {
-      if (!formID) {
-        Swal.fire("ลิงก์ไม่ถูกต้อง", "กรุณาเปิดแบบฟอร์มผ่านลิงก์ที่ถูกต้อง", "error");
-        return;
-      }
-
-      try {
-        const res = await fetch(`${config.scriptURL}?action=getForm&form=${formID}`);
-        const data = await res.json();
-
-        if (!data.success) {
-          Swal.fire("ไม่พบแบบฟอร์ม", data.message || "ลิงก์นี้อาจหมดอายุหรือถูกลบ", "error");
+        const formID = getQueryParam("formID");
+        if (!formID) {
+          Swal.fire("ไม่พบรหัสฟอร์ม", "โปรดเปิดผ่านลิงก์ที่มี ?formID=", "error");
           return;
         }
 
-        questions = data.questions;
-        renderQuestions();
-        document.getElementById("quizForm").classList.remove("d-none");
-        Swal.fire("กรุณาแชร์หน้าจอ", "ระบบจะจับภาพหน้าจอเพื่อตรวจสอบความโปร่งใส", "info");
-        await startScreenCapture();
-      } catch (error) {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถโหลดแบบฟอร์มได้ กรุณาลองใหม่ภายหลัง", "error");
+        document.getElementById("startRecBtn").addEventListener("click", () => {
+          startExamWithRecording(formID);
+        });
+      } catch (err) {
+        Swal.fire("โหลด config ไม่สำเร็จ", err.message, "error");
       }
     }
 
-    function renderQuestions() {
-      const area = document.getElementById("questionArea");
-      area.innerHTML = "";
-      questions.forEach((q, i) => {
-        if (q.type === "text") {
-          area.innerHTML += `
-            <div class="mb-3">
-              <label class="form-label">${i + 1}. ${q.question}</label>
-              <input type="text" class="form-control" name="q${i}" required />
-            </div>
-          `;
-        } else if (q.type === "choice") {
-          let optionsHTML = q.options
-            .map(
-              (opt, idx) => `
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="q${i}" id="q${i}_opt${idx}" value="${opt}" required />
-                <label class="form-check-label" for="q${i}_opt${idx}">${opt}</label>
-              </div>
-            `
-            )
-            .join("");
-          area.innerHTML += `
-            <div class="mb-3">
-              <label class="form-label">${i + 1}. ${q.question}</label>
-              ${optionsHTML}
-            </div>
-          `;
-        }
-      });
-    }
-
-    async function startScreenCapture() {
+    async function startExamWithRecording(formID) {
       try {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const video = document.createElement("video");
-        video.srcObject = stream;
-        video.play();
+        const surface = stream.getVideoTracks()[0].getSettings().displaySurface;
 
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+        if (surface !== "monitor") {
+          stream.getTracks().forEach(track => track.stop());
+          return Swal.fire("ต้องแชร์ทั้งหน้าจอ", "", "warning").then(() => startExamWithRecording(formID));
+        }
 
-        setInterval(() => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0);
-          screenshots.push(canvas.toDataURL("image/jpeg"));
-          if (screenshots.length > 10) screenshots.shift(); // เก็บไม่เกิน 10 ภาพ
-        }, 10000);
-      } catch {
-        Swal.fire("ไม่สามารถจับหน้าจอได้", "กรุณาอนุญาตให้แชร์หน้าจอเพื่อดำเนินการต่อ", "error");
+        mediaRecorder = new MediaRecorder(stream, {
+          mimeType: CONFIG.VIDEO.MIME_TYPE || "video/webm"
+        });
+
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: "video/webm" });
+          const url = URL.createObjectURL(blob);
+          const video = document.getElementById("recordedVideo");
+          video.src = url;
+          video.controls = true;
+          document.getElementById("recordingPreview").style.display = "block";
+        };
+
+        mediaRecorder.start();
+        Swal.fire("เริ่มทำแบบทดสอบ", "ระบบกำลังบันทึกหน้าจอของคุณ", "info");
+
+        await loadForm(formID);
+        document.getElementById("quizForm").style.display = "block";
+        document.getElementById("startRecBtn").style.display = "none";
+
+        stream.getVideoTracks()[0].onended = () => {
+          Swal.fire("หยุดแชร์หน้าจอ", "แบบทดสอบจะสิ้นสุดทันที", "error")
+            .then(() => window.location.reload());
+        };
+      } catch (err) {
+        Swal.fire("ไม่สามารถเริ่มบันทึกหน้าจอ", err.message, "error");
       }
     }
 
-    document.getElementById("quizForm").addEventListener("submit", async (e) => {
+    async function loadForm(formID) {
+      try {
+        const res = await fetch(`${CONFIG.SCRIPT_URL}?action=getForm&formID=${formID}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        document.getElementById("formTitle").textContent = data.title;
+        renderQuestions(data.questions);
+      } catch (err) {
+        Swal.fire("โหลดฟอร์มไม่สำเร็จ", err.message, "error");
+      }
+    }
+
+    function renderQuestions(questions) {
+      const container = document.getElementById("questionsContainer");
+      container.innerHTML = "";
+      questions.forEach((q, i) => {
+        const qDiv = document.createElement("div");
+        qDiv.className = "mb-3";
+
+        if (q.type === "text") {
+          qDiv.innerHTML = `
+            <label class="form-label">${q.question}</label>
+            <textarea class="form-control" name="q${i}" rows="2" required></textarea>
+          `;
+        } else if (q.type === "choice") {
+          const options = q.options.map(opt =>
+            `<div class="form-check">
+              <input class="form-check-input" type="radio" name="q${i}" value="${opt}" required>
+              <label class="form-check-label">${opt}</label>
+            </div>`
+          ).join("");
+          qDiv.innerHTML = `<label class="form-label">${q.question}</label>${options}`;
+        }
+
+        container.appendChild(qDiv);
+      });
+
+      document.getElementById("quizForm").addEventListener("submit", handleSubmit);
+    }
+
+    async function handleSubmit(e) {
       e.preventDefault();
       const form = e.target;
-      const formData = new FormData(form);
-      const name = formData.get("name").trim();
-      const answers = questions.map((q, i) => {
-        if (q.type === "text") {
-          return formData.get(`q${i}`).trim();
-        } else if (q.type === "choice") {
-          return formData.get(`q${i}`);
+      const answers = {};
+
+      [...form.elements].forEach(el => {
+        if (el.name && (el.type === "textarea" || el.checked)) {
+          answers[el.name] = el.value;
         }
       });
 
-      if (!name || answers.some((ans) => !ans)) {
-        return Swal.fire("กรุณากรอกข้อมูลให้ครบถ้วน", "", "warning");
-      }
+      const username = prompt("กรุณาใส่ชื่อของคุณ:");
+      if (!username) return;
 
-      const nameHash = await sha256(name);
-      const answerHashes = await Promise.all(answers.map((ans) => sha256(ans)));
-      const screenshotsHash = await Promise.all(screenshots.map((img) => sha256(img.slice(0, 100))));
+      const encryptedAnswers = xorEncrypt(JSON.stringify(answers), CONFIG.SECRET_KEY);
+      const encryptedUsername = xorEncrypt(username, CONFIG.SECRET_KEY);
+      const formID = getQueryParam("formID");
 
-      const payload = {
-        action: "submitAnswer",
-        formID,
-        name: nameHash,
-        answers: answerHashes,
-        screenshots: screenshotsHash,
-      };
+      const res = await fetch(CONFIG.SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "submitAnswerEncrypted",
+          formID: formID,
+          usernameEncrypted: encryptedUsername,
+          answersEncrypted: encryptedAnswers
+        })
+      });
 
-      try {
-        const res = await fetch(config.scriptURL, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        const result = await res.json();
+      const result = await res.json();
+      if (result.success) {
+        Swal.fire("ส่งสำเร็จ", "ระบบได้รับคำตอบของคุณแล้ว", "success");
+        form.reset();
 
-        if (result.success) {
-          Swal.fire("ส่งคำตอบสำเร็จ", "ขอบคุณสำหรับการทำแบบฟอร์ม", "success");
-          form.reset();
-          screenshots = [];
-        } else {
-          Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถส่งคำตอบได้ กรุณาลองใหม่", "error");
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
         }
-      } catch {
-        Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถส่งคำตอบได้ กรุณาลองใหม่", "error");
+      } else {
+        Swal.fire("เกิดข้อผิดพลาด", result.message || "ไม่สามารถส่งคำตอบได้", "error");
       }
-    });
+    }
 
-    // เริ่มโหลด config แล้วตามด้วยโหลดฟอร์ม
-    loadConfig().then(loadForm);
+    loadConfig();
   </script>
 </body>
 </html>
