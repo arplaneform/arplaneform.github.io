@@ -1,195 +1,4003 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>แบบทดสอบออนไลน์</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Quiz Game</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
+    <!-- Chart.js CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --success-color: #00b894;
+            --danger-color: #d63031;
+            --warning-color: #fdcb6e;
+            --info-color: #0984e3;
+            --gold-color: #ffd700;
+            --silver-color: #c0c0c0;
+            --bronze-color: #cd7f32;
+            --dark-color: #2d3436;
+            --light-color: #f8f9fa;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #dfe6e9 100%);
+        }
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--dark-color);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Kodchasan', sans-serif;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5649c0;
+            border-color: #5649c0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #8c7ae6;
+            border-color: #8c7ae6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(162, 155, 254, 0.3);
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: none;
+            transition: all 0.3s ease;
+            background-color: white;
+            overflow: hidden;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+            color: white;
+            font-weight: 500;
+            border-bottom: none;
+        }
+        
+        .form-control, .input-group-text {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(108, 92, 231, 0.25);
+        }
+        
+        #app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Host Interface Layout */
+        .host-header {
+            grid-area: header;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+        }
+        
+        .host-question-panel {
+            grid-area: question;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .host-leaderboard {
+            grid-area: leaderboard;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .host-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "header header"
+                "question leaderboard";
+            gap: 25px;
+        }
+        
+        /* Player Interface */
+        .player-waiting {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Timer styles */
+        .timer-container {
+            display: inline-flex;
+            align-items: center;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-left: 15px;
+        }
+        
+        .timer {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--danger-color);
+            margin-left: 8px;
+            font-family: 'Kodchasan', sans-serif;
+        }
+        
+        /* Answer graph */
+        .answer-graph {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        /* Help button */
+        .help-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--warning-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(253, 203, 110, 0.4);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .help-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(253, 203, 110, 0.5);
+        }
+        
+        /* Player details modal */
+        .player-details {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .player-details.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .player-details-content {
+            background-color: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .host-container {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "question"
+                    "leaderboard";
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #app {
+                padding: 15px;
+            }
+            
+            .host-question-panel,
+            .host-leaderboard {
+                padding: 20px;
+            }
+            
+            .help-button {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+        
+        /* Additional styling for better UI */
+        .correct-answer {
+            background-color: rgba(0, 184, 148, 0.1);
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .wrong-answer {
+            background-color: rgba(214, 48, 49, 0.1);
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .room-id {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        /* Improved input group styling */
+        .input-group-text {
+            background-color: #f8f9fa;
+        }
+        
+        /* Enhanced radio buttons */
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        /* Animation for correct answers */
+        @keyframes correctAnswer {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .correct-animation {
+            animation: correctAnswer 0.5s ease;
+        }
+        
+        /* Gradient background for headers */
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--info-color) 100%);
+            color: white;
+        }
+        
+        /* Modern scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        /* Enhanced button styling */
+        .btn-lg {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border-radius: 12px;
+        }
+        
+        /* Improved list group items */
+        .list-group-item {
+            transition: all 0.3s ease;
+            border-radius: 8px !important;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        /* Additional styles for better visual hierarchy */
+        .text-highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .shadow-sm {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+        }
+        
+        .shadow-md {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08) !important;
+        }
+        
+        .shadow-lg {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12) !important;
+        }
+
+        /* Remote control styles */
+        .btn-control {
+            height: 80px;
+            font-size: 1.2rem;
+        }
+        
+        .status-connected {
+            background-color: rgba(0, 184, 148, 0.1);
+            border-left: 3px solid var(--success-color);
+        }
+        
+        .status-disconnected {
+            background-color: rgba(214, 48, 49, 0.1);
+            border-left: 3px solid var(--danger-color);
+        }
+
+        /* Anti-cheat styles */
+        .cheat-detected {
+            animation: shake 0.5s;
+            background-color: rgba(214, 48, 49, 0.1);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Player ranking styles */
+        .player-rank {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .rank-1 {
+            background-color: var(--gold-color);
+            color: #000;
+        }
+        
+        .rank-2 {
+            background-color: var(--silver-color);
+            color: #000;
+        }
+        
+        .rank-3 {
+            background-color: var(--bronze-color);
+            color: #000;
+        }
+        
+        .rank-other {
+            background-color: #f8f9fa;
+            color: #000;
+        }
+
+        /* Player item styles */
+        .player-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .player-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+        }
+
+        .player-score {
+            font-weight: bold;
+            min-width: 80px;
+            text-align: right;
+            color: var(--primary-color);
+        }
+
+        /* Badge styles */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .badge-fastest {
+            background-color: var(--warning-color);
+            color: #000;
+        }
+
+        .badge-streak {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .badge-perfect {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .badge-multiplier {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Score change animation */
+        .score-change {
+            margin-left: 5px;
+            font-weight: bold;
+            animation: fadeInUp 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* New styles for answer results */
+        .result-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .text-success {
+            color: var(--success-color) !important;
+            font-weight: bold;
+        }
+
+        .text-danger {
+            color: var(--danger-color) !important;
+            font-weight: bold;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+
+        .answer-result {
+            margin-bottom: 15px;
+        }
+
+        .answer-status {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .correct-answer-label {
+            background-color: rgba(0, 184, 148, 0.1);
+            border-left: 4px solid var(--success-color);
+        }
+
+        /* Import/Export area */
+        .import-export-area {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px dashed var(--secondary-color);
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: text-bottom;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Question input styling */
+        .question-input {
+            font-weight: 500;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        /* Option input styling */
+        .option-input {
+            border-left: 3px solid var(--secondary-color);
+        }
+
+        /* Correct answer label */
+        .correct-answer-label {
+            background-color: rgba(0, 184, 148, 0.1);
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        /* Game history item */
+        .game-history-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid var(--secondary-color);
+        }
+
+        .game-history-correct {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .game-history-wrong {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        /* Winner card */
+        .winner-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        /* Control buttons */
+        .btn-control {
+            padding: 12px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* Form check styling */
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Input group styling */
+        .input-group-text {
+            background-color: rgba(108, 92, 231, 0.1);
+        }
+
+        /* Button group styling */
+        .btn-group-vertical > .btn {
+            margin-bottom: 10px;
+        }
+
+        /* Alert styling */
+        .alert {
+            border-radius: 10px;
+        }
+
+        /* Tooltip styling */
+        .tooltip-inner {
+            border-radius: 8px;
+            background-color: var(--dark-color);
+        }
+
+        /* Progress bar styling */
+        .progress {
+            border-radius: 10px;
+            height: 10px;
+        }
+
+        .progress-bar {
+            background-color: var(--primary-color);
+        }
+
+        /* Modal styling */
+        .modal-content {
+            border-radius: 15px;
+        }
+
+        /* Tab styling */
+        .nav-tabs .nav-link {
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Dropdown styling */
+        .dropdown-menu {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Pagination styling */
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Custom checkbox */
+        .custom-checkbox .custom-control-input:checked~.custom-control-label::before {
+            background-color: var(--primary-color);
+        }
+
+        /* Custom radio */
+        .custom-radio .custom-control-input:checked~.custom-control-label::before {
+            background-color: var(--primary-color);
+        }
+
+        /* Custom switch */
+        .custom-switch .custom-control-input:checked~.custom-control-label::before {
+            background-color: var(--primary-color);
+        }
+
+        /* Custom range */
+        .custom-range::-webkit-slider-thumb {
+            background: var(--primary-color);
+        }
+
+        /* Custom file input */
+        .custom-file-label::after {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Toast styling */
+        .toast {
+            border-radius: 10px;
+        }
+
+        /* Popover styling */
+        .popover {
+            border-radius: 10px;
+        }
+
+        /* Carousel styling */
+        .carousel-indicators li {
+            background-color: var(--primary-color);
+        }
+
+        /* Close button styling */
+        .close {
+            color: var(--danger-color);
+        }
+
+        /* Code styling */
+        code {
+            color: var(--primary-color);
+            background-color: rgba(108, 92, 231, 0.1);
+            border-radius: 4px;
+            padding: 2px 4px;
+        }
+
+        /* Pre styling */
+        pre {
+            background-color: rgba(108, 92, 231, 0.1);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        /* Blockquote styling */
+        blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+            color: var(--dark-color);
+        }
+
+        /* Figure styling */
+        figure {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Table styling */
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* List group styling */
+        .list-group-item.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Breadcrumb styling */
+        .breadcrumb {
+            border-radius: 10px;
+        }
+
+        /* Pagination styling */
+        .pagination {
+            border-radius: 10px;
+        }
+
+        /* Card image styling */
+        .card-img-top {
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Card image overlay styling */
+        .card-img-overlay {
+            border-radius: 10px;
+        }
+
+        /* Card group styling */
+        .card-group {
+            border-radius: 10px;
+        }
+
+        /* Card deck styling */
+        .card-deck {
+            border-radius: 10px;
+        }
+
+        /* Card columns styling */
+        .card-columns {
+            border-radius: 10px;
+        }
+
+        /* Accordion styling */
+        .accordion {
+            border-radius: 10px;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            border-radius: 10px;
+        }
+
+        /* Navbar brand styling */
+        .navbar-brand {
+            font-weight: bold;
+        }
+
+        /* Navbar toggler styling */
+        .navbar-toggler {
+            border-radius: 10px;
+        }
+
+        /* Navbar nav styling */
+        .navbar-nav {
+            border-radius: 10px;
+        }
+
+        /* Navbar text styling */
+        .navbar-text {
+            border-radius: 10px;
+        }
+
+        /* Navbar collapse styling */
+        .navbar-collapse {
+            border-radius: 10px;
+        }
+
+        /* Navbar light styling */
+        .navbar-light {
+            background-color: white;
+        }
+
+        /* Navbar dark styling */
+        .navbar-dark {
+            background-color: var(--dark-color);
+        }
+
+        /* Offcanvas styling */
+        .offcanvas {
+            border-radius: 10px;
+        }
+
+        /* Offcanvas header styling */
+        .offcanvas-header {
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Offcanvas body styling */
+        .offcanvas-body {
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Placeholder styling */
+        .placeholder {
+            border-radius: 10px;
+        }
+
+        /* Clearfix styling */
+        .clearfix {
+            border-radius: 10px;
+        }
+
+        /* Visually hidden styling */
+        .visually-hidden {
+            border-radius: 10px;
+        }
+
+        /* Stretched link styling */
+        .stretched-link {
+            border-radius: 10px;
+        }
+
+        /* Text truncation styling */
+        .text-truncate {
+            border-radius: 10px;
+        }
+
+        /* Vertical rule styling */
+        .vr {
+            border-radius: 10px;
+        }
+
+        /* Transition styling */
+        .transition {
+            border-radius: 10px;
+        }
+
+        /* Animation styling */
+        .animation {
+            border-radius: 10px;
+        }
+
+        /* Transform styling */
+        .transform {
+            border-radius: 10px;
+        }
+
+        /* Shadow styling */
+        .shadow {
+            border-radius: 10px;
+        }
+
+        /* Opacity styling */
+        .opacity {
+            border-radius: 10px;
+        }
+
+        /* Overflow styling */
+        .overflow {
+            border-radius: 10px;
+        }
+
+        /* Position styling */
+        .position {
+            border-radius: 10px;
+        }
+
+        /* Top styling */
+        .top {
+            border-radius: 10px;
+        }
+
+        /* Bottom styling */
+        .bottom {
+            border-radius: 10px;
+        }
+
+        /* Start styling */
+        .start {
+            border-radius: 10px;
+        }
+
+        /* End styling */
+        .end {
+            border-radius: 10px;
+        }
+
+        /* Translate middle styling */
+        .translate-middle {
+            border-radius: 10px;
+        }
+
+        /* Border styling */
+        .border {
+            border-radius: 10px;
+        }
+
+        /* Border top styling */
+        .border-top {
+            border-radius: 10px;
+        }
+
+        /* Border end styling */
+        .border-end {
+            border-radius: 10px;
+        }
+
+        /* Border bottom styling */
+        .border-bottom {
+            border-radius: 10px;
+        }
+
+        /* Border start styling */
+        .border-start {
+            border-radius: 10px;
+        }
+
+        /* Border primary styling */
+        .border-primary {
+            border-color: var(--primary-color) !important;
+        }
+
+        /* Border secondary styling */
+        .border-secondary {
+            border-color: var(--secondary-color) !important;
+        }
+
+        /* Border success styling */
+        .border-success {
+            border-color: var(--success-color) !important;
+        }
+
+        /* Border danger styling */
+        .border-danger {
+            border-color: var(--danger-color) !important;
+        }
+
+        /* Border warning styling */
+        .border-warning {
+            border-color: var(--warning-color) !important;
+        }
+
+        /* Border info styling */
+        .border-info {
+            border-color: var(--info-color) !important;
+        }
+
+        /* Border light styling */
+        .border-light {
+            border-color: var(--light-color) !important;
+        }
+
+        /* Border dark styling */
+        .border-dark {
+            border-color: var(--dark-color) !important;
+        }
+
+        /* Border white styling */
+        .border-white {
+            border-color: white !important;
+        }
+
+        /* Border 0 styling */
+        .border-0 {
+            border-radius: 10px;
+        }
+
+        /* Border 1 styling */
+        .border-1 {
+            border-radius: 10px;
+        }
+
+        /* Border 2 styling */
+        .border-2 {
+            border-radius: 10px;
+        }
+
+        /* Border 3 styling */
+        .border-3 {
+            border-radius: 10px;
+        }
+
+        /* Border 4 styling */
+        .border-4 {
+            border-radius: 10px;
+        }
+
+        /* Border 5 styling */
+        .border-5 {
+            border-radius: 10px;
+        }
+
+        /* Rounded styling */
+        .rounded {
+            border-radius: 10px !important;
+        }
+
+        /* Rounded top styling */
+        .rounded-top {
+            border-radius: 10px 10px 0 0 !important;
+        }
+
+        /* Rounded end styling */
+        .rounded-end {
+            border-radius: 0 10px 10px 0 !important;
+        }
+
+        /* Rounded bottom styling */
+        .rounded-bottom {
+            border-radius: 0 0 10px 10px !important;
+        }
+
+        /* Rounded start styling */
+        .rounded-start {
+            border-radius: 10px 0 0 10px !important;
+        }
+
+        /* Rounded circle styling */
+        .rounded-circle {
+            border-radius: 50% !important;
+        }
+
+        /* Rounded pill styling */
+        .rounded-pill {
+            border-radius: 50rem !important;
+        }
+
+        /* Rounded 0 styling */
+        .rounded-0 {
+            border-radius: 0 !important;
+        }
+
+        /* Rounded 1 styling */
+        .rounded-1 {
+            border-radius: 0.2rem !important;
+        }
+
+        /* Rounded 2 styling */
+        .rounded-2 {
+            border-radius: 0.25rem !important;
+        }
+
+        /* Rounded 3 styling */
+        .rounded-3 {
+            border-radius: 0.3rem !important;
+        }
+
+        /* Rounded 4 styling */
+        .rounded-4 {
+            border-radius: 0.375rem !important;
+        }
+
+        /* Rounded 5 styling */
+        .rounded-5 {
+            border-radius: 0.5rem !important;
+        }
+
+        /* Rounded 6 styling */
+        .rounded-6 {
+            border-radius: 0.6rem !important;
+        }
+
+        /* Rounded 7 styling */
+        .rounded-7 {
+            border-radius: 0.75rem !important;
+        }
+
+        /* Rounded 8 styling */
+        .rounded-8 {
+            border-radius: 1rem !important;
+        }
+
+        /* Rounded 9 styling */
+        .rounded-9 {
+            border-radius: 1.25rem !important;
+        }
+
+        /* Rounded 10 styling */
+        .rounded-10 {
+            border-radius: 1.5rem !important;
+        }
+
+        /* Float start styling */
+        .float-start {
+            border-radius: 10px;
+        }
+
+        /* Float end styling */
+        .float-end {
+            border-radius: 10px;
+        }
+
+        /* Float none styling */
+        .float-none {
+            border-radius: 10px;
+        }
+
+        /* Object fit styling */
+        .object-fit {
+            border-radius: 10px;
+        }
+
+        /* Object fit contain styling */
+        .object-fit-contain {
+            border-radius: 10px;
+        }
+
+        /* Object fit cover styling */
+        .object-fit-cover {
+            border-radius: 10px;
+        }
+
+        /* Object fit fill styling */
+        .object-fit-fill {
+            border-radius: 10px;
+        }
+
+        /* Object fit scale down styling */
+        .object-fit-scale-down {
+            border-radius: 10px;
+        }
+
+        /* Object fit none styling */
+        .object-fit-none {
+            border-radius: 10px;
+        }
+
+        /* Object position styling */
+        .object-position {
+            border-radius: 10px;
+        }
+
+        /* Opacity 0 styling */
+        .opacity-0 {
+            border-radius: 10px;
+        }
+
+        /* Opacity 25 styling */
+        .opacity-25 {
+            border-radius: 10px;
+        }
+
+        /* Opacity 50 styling */
+        .opacity-50 {
+            border-radius: 10px;
+        }
+
+        /* Opacity 75 styling */
+        .opacity-75 {
+            border-radius: 10px;
+        }
+
+        /* Opacity 100 styling */
+        .opacity-100 {
+            border-radius: 10px;
+        }
+
+        /* Overflow auto styling */
+        .overflow-auto {
+            border-radius: 10px;
+        }
+
+        /* Overflow hidden styling */
+        .overflow-hidden {
+            border-radius: 10px;
+        }
+
+        /* Overflow visible styling */
+        .overflow-visible {
+            border-radius: 10px;
+        }
+
+        /* Overflow scroll styling */
+        .overflow-scroll {
+            border-radius: 10px;
+        }
+
+        /* Overflow x auto styling */
+        .overflow-x-auto {
+            border-radius: 10px;
+        }
+
+        /* Overflow y auto styling */
+        .overflow-y-auto {
+            border-radius: 10px;
+        }
+
+        /* Overflow x hidden styling */
+        .overflow-x-hidden {
+            border-radius: 10px;
+        }
+
+        /* Overflow y hidden styling */
+        .overflow-y-hidden {
+            border-radius: 10px;
+        }
+
+        /* Overflow x visible styling */
+        .overflow-x-visible {
+            border-radius: 10px;
+        }
+
+        /* Overflow y visible styling */
+        .overflow-y-visible {
+            border-radius: 10px;
+        }
+
+        /* Overflow x scroll styling */
+        .overflow-x-scroll {
+            border-radius: 10px;
+        }
+
+        /* Overflow y scroll styling */
+        .overflow-y-scroll {
+            border-radius: 10px;
+        }
+
+        /* Position static styling */
+        .position-static {
+            border-radius: 10px;
+        }
+
+        /* Position relative styling */
+        .position-relative {
+            border-radius: 10px;
+        }
+
+        /* Position absolute styling */
+        .position-absolute {
+            border-radius: 10px;
+        }
+
+        /* Position fixed styling */
+        .position-fixed {
+            border-radius: 10px;
+        }
+
+        /* Position sticky styling */
+        .position-sticky {
+            border-radius: 10px;
+        }
+
+        /* Top 0 styling */
+        .top-0 {
+            border-radius: 10px;
+        }
+
+        /* Top 50 styling */
+        .top-50 {
+            border-radius: 10px;
+        }
+
+        /* Top 100 styling */
+        .top-100 {
+            border-radius: 10px;
+        }
+
+        /* Bottom 0 styling */
+        .bottom-0 {
+            border-radius: 10px;
+        }
+
+        /* Bottom 50 styling */
+        .bottom-50 {
+            border-radius: 10px;
+        }
+
+        /* Bottom 100 styling */
+        .bottom-100 {
+            border-radius: 10px;
+        }
+
+        /* Start 0 styling */
+        .start-0 {
+            border-radius: 10px;
+        }
+
+        /* Start 50 styling */
+        .start-50 {
+            border-radius: 10px;
+        }
+
+        /* Start 100 styling */
+        .start-100 {
+            border-radius: 10px;
+        }
+
+        /* End 0 styling */
+        .end-0 {
+            border-radius: 10px;
+        }
+
+        /* End 50 styling */
+        .end-50 {
+            border-radius: 10px;
+        }
+
+        /* End 100 styling */
+        .end-100 {
+            border-radius: 10px;
+        }
+
+        /* Translate middle styling */
+        .translate-middle {
+            border-radius: 10px;
+        }
+
+        /* Translate middle x styling */
+        .translate-middle-x {
+            border-radius: 10px;
+        }
+
+        /* Translate middle y styling */
+        .translate-middle-y {
+            border-radius: 10px;
+        }
+
+        /* Border radius styling */
+        .border-radius {
+            border-radius: 10px;
+        }
+
+        /* Border radius top styling */
+        .border-radius-top {
+            border-radius: 10px 10px 0 0;
+        }
+
+        /* Border radius end styling */
+        .border-radius-end {
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* Border radius bottom styling */
+        .border-radius-bottom {
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* Border radius start styling */
+        .border-radius-start {
+            border-radius: 10px 0 0 10px;
+        }
+
+        /* Border radius circle styling */
+        .border-radius-circle {
+            border-radius: 50%;
+        }
+
+        /* Border radius pill styling */
+        .border-radius-pill {
+            border-radius: 50rem;
+        }
+
+        /* Border radius 0 styling */
+        .border-radius-0 {
+            border-radius: 0;
+        }
+
+        /* Border radius 1 styling */
+        .border-radius-1 {
+            border-radius: 0.2rem;
+        }
+
+        /* Border radius 2 styling */
+        .border-radius-2 {
+            border-radius: 0.25rem;
+        }
+
+        /* Border radius 3 styling */
+        .border-radius-3 {
+            border-radius: 0.3rem;
+        }
+
+        /* Border radius 4 styling */
+        .border-radius-4 {
+            border-radius: 0.375rem;
+        }
+
+        /* Border radius 5 styling */
+        .border-radius-5 {
+            border-radius: 0.5rem;
+        }
+
+        /* Border radius 6 styling */
+        .border-radius-6 {
+            border-radius: 0.6rem;
+        }
+
+        /* Border radius 7 styling */
+        .border-radius-7 {
+            border-radius: 0.75rem;
+        }
+
+        /* Border radius 8 styling */
+        .border-radius-8 {
+            border-radius: 1rem;
+        }
+
+        /* Border radius 9 styling */
+        .border-radius-9 {
+            border-radius: 1.25rem;
+        }
+
+        /* Border radius 10 styling */
+        .border-radius-10 {
+            border-radius: 1.5rem;
+        }
+
+        /* Border radius sm styling */
+        .border-radius-sm {
+            border-radius: 0.2rem;
+        }
+
+        /* Border radius lg styling */
+        .border-radius-lg {
+            border-radius: 0.3rem;
+        }
+
+        /* Border radius xl styling */
+        .border-radius-xl {
+            border-radius: 0.375rem;
+        }
+
+        /* Border radius 2xl styling */
+        .border-radius-2xl {
+            border-radius: 0.5rem;
+        }
+
+        /* Border radius 3xl styling */
+        .border-radius-3xl {
+            border-radius: 0.75rem;
+        }
+
+        /* Border radius 4xl styling */
+        .border-radius-4xl {
+            border-radius: 1rem;
+        }
+
+        /* Border radius 5xl styling */
+        .border-radius-5xl {
+            border-radius: 1.25rem;
+        }
+
+        /* Border radius 6xl styling */
+        .border-radius-6xl {
+            border-radius: 1.5rem;
+        }
+
+        /* Border radius 7xl styling */
+        .border-radius-7xl {
+            border-radius: 1.75rem;
+        }
+
+        /* Border radius 8xl styling */
+        .border-radius-8xl {
+            border-radius: 2rem;
+        }
+
+        /* Border radius 9xl styling */
+        .border-radius-9xl {
+            border-radius: 2.25rem;
+        }
+
+        /* Border radius 10xl styling */
+        .border-radius-10xl {
+            border-radius: 2.5rem;
+        }
+
+        /* Border radius 11xl styling */
+        .border-radius-11xl {
+            border-radius: 2.75rem;
+        }
+
+        /* Border radius 12xl styling */
+        .border-radius-12xl {
+            border-radius: 3rem;
+        }
+
+        /* Border radius 13xl styling */
+        .border-radius-13xl {
+            border-radius: 3.25rem;
+        }
+
+        /* Border radius 14xl styling */
+        .border-radius-14xl {
+            border-radius: 3.5rem;
+        }
+
+        /* Border radius 15xl styling */
+        .border-radius-15xl {
+            border-radius: 3.75rem;
+        }
+
+        /* Border radius 16xl styling */
+        .border-radius-16xl {
+            border-radius: 4rem;
+        }
+
+        /* Border radius 17xl styling */
+        .border-radius-17xl {
+            border-radius: 4.25rem;
+        }
+
+        /* Border radius 18xl styling */
+        .border-radius-18xl {
+            border-radius: 4.5rem;
+        }
+
+        /* Border radius 19xl styling */
+        .border-radius-19xl {
+            border-radius: 4.75rem;
+        }
+
+        /* Border radius 20xl styling */
+        .border-radius-20xl {
+            border-radius: 5rem;
+        }
+
+        /* Border radius 21xl styling */
+        .border-radius-21xl {
+            border-radius: 5.25rem;
+        }
+
+        /* Border radius 22xl styling */
+        .border-radius-22xl {
+            border-radius: 5.5rem;
+        }
+
+        /* Border radius 23xl styling */
+        .border-radius-23xl {
+            border-radius: 5.75rem;
+        }
+
+        /* Border radius 24xl styling */
+        .border-radius-24xl {
+            border-radius: 6rem;
+        }
+
+        /* Border radius 25xl styling */
+        .border-radius-25xl {
+            border-radius: 6.25rem;
+        }
+
+        /* Border radius 26xl styling */
+        .border-radius-26xl {
+            border-radius: 6.5rem;
+        }
+
+        /* Border radius 27xl styling */
+        .border-radius-27xl {
+            border-radius: 6.75rem;
+        }
+
+        /* Border radius 28xl styling */
+        .border-radius-28xl {
+            border-radius: 7rem;
+        }
+
+        /* Border radius 29xl styling */
+        .border-radius-29xl {
+            border-radius: 7.25rem;
+        }
+
+        /* Border radius 30xl styling */
+        .border-radius-30xl {
+            border-radius: 7.5rem;
+        }
+
+        /* Border radius 31xl styling */
+        .border-radius-31xl {
+            border-radius: 7.75rem;
+        }
+
+        /* Border radius 32xl styling */
+        .border-radius-32xl {
+            border-radius: 8rem;
+        }
+
+        /* Border radius 33xl styling */
+        .border-radius-33xl {
+            border-radius: 8.25rem;
+        }
+
+        /* Border radius 34xl styling */
+        .border-radius-34xl {
+            border-radius: 8.5rem;
+        }
+
+        /* Border radius 35xl styling */
+        .border-radius-35xl {
+            border-radius: 8.75rem;
+        }
+
+        /* Border radius 36xl styling */
+        .border-radius-36xl {
+            border-radius: 9rem;
+        }
+
+        /* Border radius 37xl styling */
+        .border-radius-37xl {
+            border-radius: 9.25rem;
+        }
+
+        /* Border radius 38xl styling */
+        .border-radius-38xl {
+            border-radius: 9.5rem;
+        }
+
+        /* Border radius 39xl styling */
+        .border-radius-39xl {
+            border-radius: 9.75rem;
+        }
+
+        /* Border radius 40xl styling */
+        .border-radius-40xl {
+            border-radius: 10rem;
+        }
+
+        /* Border radius 41xl styling */
+        .border-radius-41xl {
+            border-radius: 10.25rem;
+        }
+
+        /* Border radius 42xl styling */
+        .border-radius-42xl {
+            border-radius: 10.5rem;
+        }
+
+        /* Border radius 43xl styling */
+        .border-radius-43xl {
+            border-radius: 10.75rem;
+        }
+
+        /* Border radius 44xl styling */
+        .border-radius-44xl {
+            border-radius: 11rem;
+        }
+
+        /* Border radius 45xl styling */
+        .border-radius-45xl {
+            border-radius: 11.25rem;
+        }
+
+        /* Border radius 46xl styling */
+        .border-radius-46xl {
+            border-radius: 11.5rem;
+        }
+
+        /* Border radius 47xl styling */
+        .border-radius-47xl {
+            border-radius: 11.75rem;
+        }
+
+        /* Border radius 48xl styling */
+        .border-radius-48xl {
+            border-radius: 12rem;
+        }
+
+        /* Border radius 49xl styling */
+        .border-radius-49xl {
+            border-radius: 12.25rem;
+        }
+
+        /* Border radius 50xl styling */
+        .border-radius-50xl {
+            border-radius: 12.5rem;
+        }
+
+        /* Border radius 51xl styling */
+        .border-radius-51xl {
+            border-radius: 12.75rem;
+        }
+
+        /* Border radius 52xl styling */
+        .border-radius-52xl {
+            border-radius: 13rem;
+        }
+
+        /* Border radius 53xl styling */
+        .border-radius-53xl {
+            border-radius: 13.25rem;
+        }
+
+        /* Border radius 54xl styling */
+        .border-radius-54xl {
+            border-radius: 13.5rem;
+        }
+
+        /* Border radius 55xl styling */
+        .border-radius-55xl {
+            border-radius: 13.75rem;
+        }
+
+        /* Border radius 56xl styling */
+        .border-radius-56xl {
+            border-radius: 14rem;
+        }
+
+        /* Border radius 57xl styling */
+        .border-radius-57xl {
+            border-radius: 14.25rem;
+        }
+
+        /* Border radius 58xl styling */
+        .border-radius-58xl {
+            border-radius: 14.5rem;
+        }
+
+        /* Border radius 59xl styling */
+        .border-radius-59xl {
+            border-radius: 14.75rem;
+        }
+
+        /* Border radius 60xl styling */
+        .border-radius-60xl {
+            border-radius: 15rem;
+        }
+
+        /* Border radius 61xl styling */
+        .border-radius-61xl {
+            border-radius: 15.25rem;
+        }
+
+        /* Border radius 62xl styling */
+        .border-radius-62xl {
+            border-radius: 15.5rem;
+        }
+
+        /* Border radius 63xl styling */
+        .border-radius-63xl {
+            border-radius: 15.75rem;
+        }
+
+        /* Border radius 64xl styling */
+        .border-radius-64xl {
+            border-radius: 16rem;
+        }
+
+        /* Border radius 65xl styling */
+        .border-radius-65xl {
+            border-radius: 16.25rem;
+        }
+
+        /* Border radius 66xl styling */
+        .border-radius-66xl {
+            border-radius: 16.5rem;
+        }
+
+        /* Border radius 67xl styling */
+        .border-radius-67xl {
+            border-radius: 16.75rem;
+        }
+
+        /* Border radius 68xl styling */
+        .border-radius-68xl {
+            border-radius: 17rem;
+        }
+
+        /* Border radius 69xl styling */
+        .border-radius-69xl {
+            border-radius: 17.25rem;
+        }
+
+        /* Border radius 70xl styling */
+        .border-radius-70xl {
+            border-radius: 17.5rem;
+        }
+
+        /* Border radius 71xl styling */
+        .border-radius-71xl {
+            border-radius: 17.75rem;
+        }
+
+        /* Border radius 72xl styling */
+        .border-radius-72xl {
+            border-radius: 18rem;
+        }
+
+        /* Border radius 73xl styling */
+        .border-radius-73xl {
+            border-radius: 18.25rem;
+        }
+
+        /* Border radius 74xl styling */
+        .border-radius-74xl {
+            border-radius: 18.5rem;
+        }
+
+        /* Border radius 75xl styling */
+        .border-radius-75xl {
+            border-radius: 18.75rem;
+        }
+
+        /* Border radius 76xl styling */
+        .border-radius-76xl {
+            border-radius: 19rem;
+        }
+
+        /* Border radius 77xl styling */
+        .border-radius-77xl {
+            border-radius: 19.25rem;
+        }
+
+        /* Border radius 78xl styling */
+        .border-radius-78xl {
+            border-radius: 19.5rem;
+        }
+
+        /* Border radius 79xl styling */
+        .border-radius-79xl {
+            border-radius: 19.75rem;
+        }
+
+        /* Border radius 80xl styling */
+        .border-radius-80xl {
+            border-radius: 20rem;
+        }
+
+        /* Border radius 81xl styling */
+        .border-radius-81xl {
+            border-radius: 20.25rem;
+        }
+
+        /* Border radius 82xl styling */
+        .border-radius-82xl {
+            border-radius: 20.5rem;
+        }
+
+        /* Border radius 83xl styling */
+        .border-radius-83xl {
+            border-radius: 20.75rem;
+        }
+
+        /* Border radius 84xl styling */
+        .border-radius-84xl {
+            border-radius: 21rem;
+        }
+
+        /* Border radius 85xl styling */
+        .border-radius-85xl {
+            border-radius: 21.25rem;
+        }
+
+        /* Border radius 86xl styling */
+        .border-radius-86xl {
+            border-radius: 21.5rem;
+        }
+
+        /* Border radius 87xl styling */
+        .border-radius-87xl {
+            border-radius: 21.75rem;
+        }
+
+        /* Border radius 88xl styling */
+        .border-radius-88xl {
+            border-radius: 22rem;
+        }
+
+        /* Border radius 89xl styling */
+        .border-radius-89xl {
+            border-radius: 22.25rem;
+        }
+
+        /* Border radius 90xl styling */
+        .border-radius-90xl {
+            border-radius: 22.5rem;
+        }
+
+        /* Border radius 91xl styling */
+        .border-radius-91xl {
+            border-radius: 22.75rem;
+        }
+
+        /* Border radius 92xl styling */
+        .border-radius-92xl {
+            border-radius: 23rem;
+        }
+
+        /* Border radius 93xl styling */
+        .border-radius-93xl {
+            border-radius: 23.25rem;
+        }
+
+        /* Border radius 94xl styling */
+        .border-radius-94xl {
+            border-radius: 23.5rem;
+        }
+
+        /* Border radius 95xl styling */
+        .border-radius-95xl {
+            border-radius: 23.75rem;
+        }
+
+        /* Border radius 96xl styling */
+        .border-radius-96xl {
+            border-radius: 24rem;
+        }
+
+        /* Border radius 97xl styling */
+        .border-radius-97xl {
+            border-radius: 24.25rem;
+        }
+
+        /* Border radius 98xl styling */
+        .border-radius-98xl {
+            border-radius: 24.5rem;
+        }
+
+        /* Border radius 99xl styling */
+        .border-radius-99xl {
+            border-radius: 24.75rem;
+        }
+
+        /* Border radius 100xl styling */
+        .border-radius-100xl {
+            border-radius: 25rem;
+        }
+    </style>
 </head>
-<body class="bg-light">
-
-  <div class="container my-5">
-    <div class="text-center mb-4">
-      <h1 id="formTitle">กำลังโหลด...</h1>
+<body>
+    <!-- ส่วนเนื้อหาของแอปพลิเคชัน -->
+    <div id="app" class="container mt-3">
+        <!-- เนื้อหาจะถูก render โดย JavaScript -->
+    </div>
+    
+    <!-- ปุ่มช่วยเหลือ (สำหรับผู้เล่น) -->
+    <div id="helpButton" class="help-button animate__animated animate__pulse" style="display: none;">
+        <i class="fas fa-question"></i>
+    </div>
+    
+    <!-- Modal รายละเอียดผู้เล่น -->
+    <div id="playerDetails" class="player-details">
+        <div class="player-details-content">
+            <div class="player-details-header d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <h4 id="playerDetailsTitle" class="mb-0">รายละเอียดผู้เล่น</h4>
+                <button class="btn btn-close" onclick="hidePlayerDetails()"></button>
+            </div>
+            <div id="playerDetailsContent">
+                <!-- Content will be filled dynamically -->
+            </div>
+        </div>
     </div>
 
-    <form id="quizForm" class="card p-4 shadow-sm" style="display: none;">
-      <div id="questionsContainer"></div>
-      <div class="mt-4 d-flex justify-content-between">
-        <button type="button" id="startRecBtn" class="btn btn-danger">เริ่มทำแบบทดสอบ (แชร์หน้าจอ)</button>
-        <button type="submit" class="btn btn-primary">ส่งคำตอบ</button>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- PeerJS -->
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+// Application State
+const appState = {
+  role: null,
+  peer: null,
+  connections: {},
+  hostConnection: null,
+  quizData: {
+    questions: [],
+    currentQuestion: 0,
+    answers: {},
+    timePerQuestion: 30,
+    showAnswer: false
+  },
+  players: {},
+  playerName: '',
+  timer: null,
+  timeLeft: 0,
+  playerScore: 0,
+  answerSubmitted: false,
+  answerChart: null,
+  historyChart: null,
+  helpUsed: false,
+  leaderboardHistory: [],
+  remoteControl: {
+    isControlled: false,
+    controllerPeerId: null,
+    controllerConnection: null,
+    controlCode: null
+  },
+  antiCheat: {
+    answerTimeThreshold: 3000,
+    readingTimePerCharacter: 50,
+    optionChangeThreshold: 2,
+    suspiciousPatterns: {},
+    cheatingDetected: {}
+  },
+  lastLeaderboardUpdate: 0,
+  leaderboardUpdateInterval: null,
+  controlUpdateInterval: null
+};
+
+// Utility Functions
+function showAlert(title, text, icon, confirmButtonText = 'ตกลง') {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: icon,
+    confirmButtonText: confirmButtonText,
+    customClass: {
+      confirmButton: 'btn btn-' + (icon === 'error' ? 'danger' : icon === 'warning' ? 'warning' : 'primary')
+    },
+    buttonsStyling: false
+  });
+}
+
+function showConfirm(title, text, icon = 'warning') {
+  return Swal.fire({
+    title: title,
+    text: text,
+    icon: icon,
+    showCancelButton: true,
+    confirmButtonText: 'ยืนยัน',
+    cancelButtonText: 'ยกเลิก',
+    customClass: {
+      confirmButton: 'btn btn-primary me-2',
+      cancelButton: 'btn btn-secondary'
+    },
+    buttonsStyling: false
+  });
+}
+
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+function createConfetti() {
+  confetti({
+    particleCount: 150,
+    spread: 70,
+    origin: { y: 0.6 },
+    colors: ['#6c5ce7', '#00b894', '#fdcb6e', '#d63031', '#0984e3']
+  });
+}
+
+        // 8-digit Peer ID Generation
+function generateShortPeerId() {
+  const timestampPart = Date.now().toString().slice(-6);
+  const randomPart = Math.floor(10 + Math.random() * 90).toString();
+  return timestampPart + randomPart;
+}
+
+        async function isPeerIdUnique(peerId) {
+            return true;
+        }
+
+        async function createUniquePeerId() {
+            let peerId;
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            do {
+                peerId = generateShortPeerId();
+                attempts++;
+                if (attempts >= maxAttempts) {
+                    throw new Error('Cannot generate unique ID after maximum attempts');
+                }
+            } while (!(await isPeerIdUnique(peerId)));
+
+            return peerId;
+        }
+
+        // Core Game Functions
+// Core Game Functions
+function initApp() {
+  renderHomeScreen();
+}
+
+function renderHomeScreen() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="text-center animate__animated animate__fadeIn">
+      <h1 class="mb-4">เกมตอบคำถามแบบ P2P</h1>
+      <div class="d-grid gap-2 col-md-6 mx-auto">
+        <button class="btn btn-primary btn-lg py-3 animate__animated animate__pulse animate__infinite" onclick="selectHostMode()">
+          <i class="fas fa-user-plus me-2"></i> เป็นผู้จัดเกม (Host)
+        </button>
+        <button class="btn btn-secondary btn-lg py-3 animate__animated animate__pulse animate__infinite animate__delay-1s" onclick="renderPlayerScreen()">
+          <i class="fas fa-users me-2"></i> เป็นผู้เล่น (Player)
+        </button>
       </div>
-    </form>
-
-    <div class="mt-4" id="recordingPreview" style="display: none;">
-      <h5>วิดีโอหน้าจอของคุณ:</h5>
-      <video id="recordedVideo" width="100%" controls></video>
     </div>
-  </div>
+  `;
+  
+  document.getElementById('helpButton').style.display = 'none';
+}
 
-  <script>
-    let CONFIG = {};
-    let mediaRecorder, recordedChunks = [];
 
-    function getQueryParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
-    function xorEncrypt(str, key) {
-      return btoa([...str].map((ch, i) =>
-        String.fromCharCode(ch.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-      ).join(""));
-    }
-
-    async function loadConfig() {
-      try {
-        const res = await fetch("config.json");
-        CONFIG = await res.json();
-
-        const formID = getQueryParam("formID");
-        if (!formID) {
-          Swal.fire("ไม่พบรหัสฟอร์ม", "โปรดเปิดผ่านลิงก์ที่มี ?formID=", "error");
-          return;
+        function selectHostMode() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="text-center animate__animated animate__fadeIn">
+                    <h1 class="mb-4">เลือกโหมดการเป็น Host</h1>
+                    <div class="d-grid gap-2 col-md-6 mx-auto">
+                        <button class="btn btn-primary btn-lg py-3" onclick="renderHostScreen()">
+                            <i class="fas fa-laptop me-2"></i> เป็น Host หลัก
+                        </button>
+                        <button class="btn btn-secondary btn-lg py-3" onclick="renderRemoteControlScreen()">
+                            <i class="fas fa-mobile-alt me-2"></i> ควบคุมผ่านมือถือ
+                        </button>
+                        <button class="btn btn-outline-secondary btn-lg py-3" onclick="renderHomeScreen()">
+                            <i class="fas fa-arrow-left me-2"></i> กลับ
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
-        document.getElementById("startRecBtn").addEventListener("click", () => {
-          startExamWithRecording(formID);
-        });
-      } catch (err) {
-        Swal.fire("โหลด config ไม่สำเร็จ", err.message, "error");
+        function renderRemoteControlScreen() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="animate__animated animate__fadeIn">
+                    <h1 class="text-center mb-4">ควบคุมผ่านมือถือ</h1>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">รหัสควบคุม:</label>
+                                <input type="text" id="controlCode" class="form-control" placeholder="กรอกรหัสควบคุมจาก Host หลัก">
+                            </div>
+                            <button class="btn btn-primary w-100" onclick="verifyControlCode()">
+                                <i class="fas fa-link me-1"></i> เชื่อมต่อ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function verifyControlCode() {
+            const controlCode = document.getElementById('controlCode').value.trim();
+            if (!controlCode) {
+                showAlert('เกิดข้อผิดพลาด', 'กรุณากรอกรหัสควบคุม', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'กำลังเชื่อมต่อ...',
+                html: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                const controllerPeer = new Peer(`controller-${controlCode}`, {
+                    debug: 2,
+                    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+                });
+
+                controllerPeer.on('open', (id) => {
+                    appState.remoteControl.controlCode = controlCode;
+                    Swal.close();
+                    initializeRemoteControl(controllerPeer);
+                });
+
+                controllerPeer.on('error', (err) => {
+                    Swal.close();
+                    showAlert('เกิดข้อผิดพลาด', 'การเชื่อมต่อล้มเหลว: ' + err.message, 'error');
+                });
+            } catch (error) {
+                Swal.close();
+                showAlert('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อได้: ' + error.message, 'error');
+            }
+        }
+
+function initializeRemoteControl(controllerPeer) {
+  controllerPeer.on('connection', (conn) => {
+    console.log('Remote control connection attempt from:', conn.peer);
+    
+    conn.on('open', () => {
+      console.log('Remote control connected:', conn.peer);
+      appState.remoteControl.isControlled = true;
+      appState.remoteControl.controllerConnection = conn;
+      appState.remoteControl.controllerPeerId = conn.peer;
+
+      sendControlUpdate();
+      startControlUpdates();
+      renderRemoteControlInterface();
+    });
+function sendControlUpdate() {
+  if (appState.remoteControl.controllerConnection && appState.remoteControl.controllerConnection.open) {
+    const data = {
+      type: 'controlUpdate',
+      timeLeft: appState.timeLeft,
+      currentQuestion: appState.quizData.currentQuestion,
+      totalQuestions: appState.quizData.questions.length,
+      players: getSortedPlayers(),
+      showAnswer: appState.quizData.showAnswer,
+      timestamp: Date.now()
+    };
+    appState.remoteControl.controllerConnection.send(data);
+  }
+}
+
+function startControlUpdates() {
+  if (appState.controlUpdateInterval) {
+    clearInterval(appState.controlUpdateInterval);
+  }
+  
+  appState.controlUpdateInterval = setInterval(() => {
+    sendControlUpdate();
+  }, 2000);
+}
+
+function handleControlData(data) {
+  console.log('Handling control data:', data);
+  
+  switch (data.type) {
+    case 'startQuiz':
+      if (!appState.quizData.showAnswer && appState.quizData.currentQuestion === 0) {
+        startQuiz();
       }
-    }
-
-    async function startExamWithRecording(formID) {
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const surface = stream.getVideoTracks()[0].getSettings().displaySurface;
-
-        if (surface !== "monitor") {
-          stream.getTracks().forEach(track => track.stop());
-          return Swal.fire("ต้องแชร์ทั้งหน้าจอ", "", "warning").then(() => startExamWithRecording(formID));
-        }
-
-        mediaRecorder = new MediaRecorder(stream, {
-          mimeType: CONFIG.VIDEO.MIME_TYPE || "video/webm"
-        });
-
-        recordedChunks = [];
-
-        mediaRecorder.ondataavailable = e => {
-          if (e.data.size > 0) recordedChunks.push(e.data);
-        };
-
-        mediaRecorder.onstop = () => {
-          const blob = new Blob(recordedChunks, { type: "video/webm" });
-          const url = URL.createObjectURL(blob);
-          const video = document.getElementById("recordedVideo");
-          video.src = url;
-          video.controls = true;
-          document.getElementById("recordingPreview").style.display = "block";
-        };
-
-        mediaRecorder.start();
-        Swal.fire("เริ่มทำแบบทดสอบ", "ระบบกำลังบันทึกหน้าจอของคุณ", "info");
-
-        await loadForm(formID);
-        document.getElementById("quizForm").style.display = "block";
-        document.getElementById("startRecBtn").style.display = "none";
-
-        stream.getVideoTracks()[0].onended = () => {
-          Swal.fire("หยุดแชร์หน้าจอ", "แบบทดสอบจะสิ้นสุดทันที", "error")
-            .then(() => window.location.reload());
-        };
-      } catch (err) {
-        Swal.fire("ไม่สามารถเริ่มบันทึกหน้าจอ", err.message, "error");
+      break;
+      
+    case 'nextQuestion':
+      if (appState.quizData.showAnswer && 
+          appState.quizData.currentQuestion < appState.quizData.questions.length - 1) {
+        nextQuestion();
       }
-    }
-
-    async function loadForm(formID) {
-      try {
-        const res = await fetch(`${CONFIG.SCRIPT_URL}?action=getForm&formID=${formID}`);
-        const data = await res.json();
-        if (!data.success) throw new Error(data.message);
-        document.getElementById("formTitle").textContent = data.title;
-        renderQuestions(data.questions);
-      } catch (err) {
-        Swal.fire("โหลดฟอร์มไม่สำเร็จ", err.message, "error");
+      break;
+      
+    case 'showAnswer':
+      if (!appState.quizData.showAnswer && appState.quizData.currentQuestion >= 0) {
+        showAnswer();
       }
-    }
-
-    function renderQuestions(questions) {
-      const container = document.getElementById("questionsContainer");
-      container.innerHTML = "";
-      questions.forEach((q, i) => {
-        const qDiv = document.createElement("div");
-        qDiv.className = "mb-3";
-
-        if (q.type === "text") {
-          qDiv.innerHTML = `
-            <label class="form-label">${q.question}</label>
-            <textarea class="form-control" name="q${i}" rows="2" required></textarea>
-          `;
-        } else if (q.type === "choice") {
-          const options = q.options.map(opt =>
-            `<div class="form-check">
-              <input class="form-check-input" type="radio" name="q${i}" value="${opt}" required>
-              <label class="form-check-label">${opt}</label>
-            </div>`
-          ).join("");
-          qDiv.innerHTML = `<label class="form-label">${q.question}</label>${options}`;
-        }
-
-        container.appendChild(qDiv);
-      });
-
-      document.getElementById("quizForm").addEventListener("submit", handleSubmit);
-    }
-
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const form = e.target;
-      const answers = {};
-
-      [...form.elements].forEach(el => {
-        if (el.name && (el.type === "textarea" || el.checked)) {
-          answers[el.name] = el.value;
-        }
-      });
-
-      const username = prompt("กรุณาใส่ชื่อของคุณ:");
-      if (!username) return;
-
-      const encryptedAnswers = xorEncrypt(JSON.stringify(answers), CONFIG.SECRET_KEY);
-      const encryptedUsername = xorEncrypt(username, CONFIG.SECRET_KEY);
-      const formID = getQueryParam("formID");
-
-      const res = await fetch(CONFIG.SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "submitAnswerEncrypted",
-          formID: formID,
-          usernameEncrypted: encryptedUsername,
-          answersEncrypted: encryptedAnswers
-        })
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        Swal.fire("ส่งสำเร็จ", "ระบบได้รับคำตอบของคุณแล้ว", "success");
-        form.reset();
-
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-          mediaRecorder.stop();
-        }
-      } else {
-        Swal.fire("เกิดข้อผิดพลาด", result.message || "ไม่สามารถส่งคำตอบได้", "error");
+      break;
+      
+    case 'endGame':
+      endGame();
+      break;
+      
+    case 'restartQuiz':
+      restartQuiz();
+      break;
+      
+    case 'ping':
+      if (appState.remoteControl.controllerConnection) {
+        appState.remoteControl.controllerConnection.send({ type: 'pong', timestamp: Date.now() });
       }
-    }
+      break;
+  }
+}
 
-    loadConfig();
-  </script>
+    conn.on('data', (data) => {
+      console.log('Control data received:', data);
+      handleControlData(data);
+    });
+    
+    conn.on('close', () => {
+      console.log('Control connection closed');
+      handleControllerDisconnect();
+    });
+    
+    conn.on('error', (err) => {
+      console.error('Control connection error:', err);
+      handleControllerDisconnect();
+    });
+  });
+}
+
+        function renderRemoteControlInterface() {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="animate__animated animate__fadeIn">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">โหมดควบคุมระยะไกล</h2>
+                        <span class="badge bg-success">
+                            <i class="fas fa-mobile-alt me-1"></i> Connected
+                        </span>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">รหัสควบคุม</h5>
+                            <div class="input-group mb-3">
+                                <input type="text" id="controlCodeDisplay" class="form-control" 
+                                       value="${appState.remoteControl.controlCode}" readonly>
+                                <button class="btn btn-outline-secondary" onclick="copyControlCode()">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <p class="text-muted small">
+                                ใช้รหัสนี้ในการเชื่อมต่อจากอุปกรณ์ควบคุม
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">คำสั่งควบคุม</h5>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="sendControlCommand('startQuiz')" ${appState.quizData.currentQuestion > 0 ? 'disabled' : ''}>
+                                    <i class="fas fa-play me-1"></i> เริ่มเกม
+                                </button>
+                                <button class="btn btn-warning" onclick="sendControlCommand('nextQuestion')" 
+                                        ${appState.quizData.showAnswer && appState.quizData.currentQuestion < appState.quizData.questions.length - 1 ? '' : 'disabled'}>
+                                    <i class="fas fa-arrow-right me-1"></i> คำถามต่อไป
+                                </button>
+                                <button class="btn btn-success" onclick="sendControlCommand('showAnswer')"
+                                        ${!appState.quizData.showAnswer && appState.quizData.currentQuestion >= 0 ? '' : 'disabled'}>
+                                    <i class="fas fa-lightbulb me-1"></i> แสดงคำตอบ
+                                </button>
+                                <button class="btn btn-danger" onclick="sendControlCommand('endGame')">
+                                    <i class="fas fa-stop me-1"></i> จบเกม
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="disconnectRemoteControl()">
+                                    <i class="fas fa-unlink me-1"></i> ยกเลิกการควบคุม
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function sendControlCommand(command) {
+            if (appState.remoteControl.controllerConnection) {
+                appState.remoteControl.controllerConnection.send({
+                    type: command,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        function startControlUpdates(conn) {
+            if (appState.controlUpdateInterval) {
+                clearInterval(appState.controlUpdateInterval);
+            }
+            
+            appState.controlUpdateInterval = setInterval(() => {
+                if (conn.open) {
+                    conn.send({
+                        type: 'controlUpdate',
+                        timeLeft: appState.timeLeft,
+                        currentQuestion: appState.quizData.currentQuestion,
+                        players: getSortedPlayers(),
+                        showAnswer: appState.quizData.showAnswer,
+                        timestamp: Date.now()
+                    });
+                }
+            }, 1000);
+        }
+
+        function handleControlData(data) {
+            switch (data.type) {
+                case 'startQuiz':
+                    if (!appState.quizData.showAnswer && appState.quizData.currentQuestion === 0) {
+                        startQuiz();
+                    }
+                    break;
+                case 'nextQuestion':
+                    if (appState.quizData.showAnswer) {
+                        nextQuestion();
+                    }
+                    break;
+                case 'showAnswer':
+                    if (!appState.quizData.showAnswer) {
+                        showAnswer();
+                    }
+                    break;
+                case 'endGame':
+                    endGame();
+                    break;
+                case 'refresh':
+                    updatePlayersList();
+                    broadcastLeaderboardUpdate();
+                    break;
+                case 'restartQuiz':
+                    restartQuiz();
+                    break;
+            }
+        }
+
+        function disconnectRemoteControl() {
+            if (appState.remoteControl.controllerConnection) {
+                appState.remoteControl.controllerConnection.close();
+            }
+            handleControllerDisconnect();
+        }
+
+        function handleControllerDisconnect() {
+            if (appState.controlUpdateInterval) {
+                clearInterval(appState.controlUpdateInterval);
+                appState.controlUpdateInterval = null;
+            }
+            appState.remoteControl.isControlled = false;
+            appState.remoteControl.controllerConnection = null;
+            appState.remoteControl.controllerPeerId = null;
+            
+            showAlert('แจ้งเตือน', 'การเชื่อมต่อกับตัวควบคุมถูกยกเลิก', 'info');
+            if (appState.role === 'host') {
+                renderHostScreen();
+            }
+        }
+
+        function copyControlCode() {
+            navigator.clipboard.writeText(appState.remoteControl.controlCode);
+            showAlert('สำเร็จ', 'คัดลอกรหัสควบคุมเรียบร้อยแล้ว', 'success');
+        }
+
+        async function renderHostScreen() {
+            appState.role = 'host';
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="host-container animate__animated animate__fadeIn">
+                    <div class="host-header">
+                        <h2>รหัสห้อง: <span id="hostId" class="fw-bold room-id"></span></h2>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" onclick="copyHostId()">
+                            <i class="fas fa-copy me-1"></i> คัดลอกรหัสห้อง
+                        </button>
+                        ${appState.remoteControl.isControlled ? `
+                        <div class="mt-2">
+                            <span class="badge bg-success">
+                                <i class="fas fa-mobile-alt me-1"></i> ถูกควบคุมโดยอุปกรณ์อื่น
+                            </span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="host-question-panel">
+                        <div id="quizSetupArea">
+                            <h3 class="mb-3">ตั้งค่าคำถาม</h3>
+                            <div class="mb-3">
+                                <label class="form-label">เวลาต่อคำถาม (วินาที):</label>
+                                <input type="number" id="timePerQuestion" class="form-control" min="10" max="120" value="30">
+                            </div>
+                            <div id="questionsContainer" class="mt-3"></div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button class="btn btn-success" onclick="addQuestion()">
+                                    <i class="fas fa-plus-circle me-1"></i> เพิ่มคำถาม
+                                </button>
+                                <button class="btn btn-primary" onclick="startQuiz()" ${appState.remoteControl.isControlled ? 'disabled' : ''}>
+                                    <i class="fas fa-play-circle me-1"></i> เริ่มเกม
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="gameQuestionArea" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 id="currentQuestionText"></h3>
+                                <div class="timer-container">
+                                    <span id="timer" class="timer">30</span>
+                                </div>
+                            </div>
+                            
+                            <div id="questionOptions"></div>
+                            
+                            <div class="mt-3">
+                                <span id="answeredCount">0</span> / <span id="totalPlayers">0</span> คนตอบแล้ว
+                            </div>
+                            
+                            <div class="answer-graph">
+                                <canvas id="answerChart"></canvas>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <button id="showAnswerBtn" class="btn btn-warning" onclick="showAnswer()" ${appState.remoteControl.isControlled ? 'disabled' : ''}>
+                                    <i class="fas fa-lightbulb me-1"></i> แสดงคำตอบ
+                                </button>
+                                <button id="nextQuestionBtn" class="btn btn-primary" onclick="nextQuestion()" disabled ${appState.remoteControl.isControlled ? 'disabled' : ''}>
+                                    <i class="fas fa-arrow-right me-1"></i> คำถามต่อไป
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="host-leaderboard">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="mb-0">คะแนนผู้เล่น</h3>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="refreshLeaderboard()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="showLeaderboardFullscreen()">
+                                    <i class="fas fa-expand"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="playersList">
+                            <div id="players" class="list-group"></div>
+                        </div>
+                        <div class="history-chart mt-3">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            await initializePeer(true);
+            renderQuestions();
+        }
+
+        async function renderPlayerScreen() {
+            appState.role = 'player';
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="animate__animated animate__fadeIn">
+                    <h1 class="text-center mb-4">ผู้เล่น</h1>
+                    
+                    <div id="joinArea">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">เข้าร่วมเกม</h5>
+                                <div class="mb-3">
+                                    <label class="form-label">ชื่อผู้เล่น:</label>
+                                    <input type="text" id="playerName" class="form-control" placeholder="กรอกชื่อของคุณ">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">รหัสห้อง:</label>
+                                    <div class="input-group">
+                                        <input type="text" id="roomId" class="form-control" placeholder="กรอกรหัสห้องจาก Host">
+                                        <button class="btn btn-primary" type="button" onclick="joinRoom()">
+                                            <i class="fas fa-sign-in-alt me-1"></i> เข้าร่วม
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="playerGameArea" style="display: none;">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 id="playerQuestionText" class="card-title mb-0"></h3>
+                                    <div class="timer-container">
+                                        <span id="playerTimer" class="timer">30</span>
+                                    </div>
+                                </div>
+                                <div id="playerOptions" class="mt-3"></div>
+                                <div class="d-grid gap-2 mt-3">
+                                    <button id="submitAnswerBtn" class="btn btn-primary" disabled>
+                                        <i class="fas fa-paper-plane me-1"></i> ส่งคำตอบ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="playerWaitingArea" class="text-center py-4" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">กำลังโหลด...</span>
+                        </div>
+                        <p class="mt-2">รอผู้จัดเกมเริ่มเกม...</p>
+                    </div>
+                    
+                    <div id="playerAnswerSubmitted" class="card" style="display: none;">
+                        <div class="card-body">
+                            <!-- จะถูกเติมข้อมูลโดยฟังก์ชัน handleShowAnswer -->
+                        </div>
+                    </div>
+                    
+                    <div id="playerResults" style="display: none;">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 class="card-title">สรุปผล</h3>
+                                <div class="display-4 my-4">
+                                    คะแนนของคุณ: <span id="playerScore" class="text-primary">0</span>
+                                </div>
+                                <div id="playerRank" class="mb-4"></div>
+                                <button class="btn btn-secondary" onclick="renderHomeScreen()">
+                                    <i class="fas fa-home me-1"></i> กลับสู่หน้าหลัก
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('playerWaitingArea').style.display = 'none';
+            document.getElementById('helpButton').style.display = 'none';
+            await initializePeer(false);
+            
+            document.getElementById('helpButton').addEventListener('click', useHelp);
+        }
+
+        async function initializePeer(isHost) {
+            try {
+                const peerId = await createUniquePeerId();
+                
+                appState.peer = new Peer(peerId, {
+                    debug: 2,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+
+                appState.peer.on('open', (id) => {
+                    console.log('Peer ID:', id);
+                    if (isHost) {
+                        document.getElementById('hostId').textContent = id;
+                    }
+                });
+                
+                appState.peer.on('connection', (conn) => {
+                    conn.on('open', () => {
+                        if (isHost) {
+                            appState.connections[conn.peer] = conn;
+                            addPlayer(conn.peer);
+                            
+                            if (appState.quizData.questions.length > 0) {
+                                sendToPlayer(conn.peer, {
+                                    type: 'gameData',
+                                    data: appState.quizData,
+                                    leaderboard: getSortedPlayers()
+                                });
+                            }
+                        }
+                    });
+                    
+                    conn.on('data', (data) => handleData(conn.peer, data));
+                    conn.on('close', () => {
+                        if (isHost) {
+                            removePlayer(conn.peer);
+                            delete appState.connections[conn.peer];
+                            updatePlayersList();
+                            broadcastLeaderboardUpdate();
+                        }
+                    });
+                    
+                    conn.on('error', (err) => {
+                        console.error('Connection error:', err);
+                    });
+                });
+                
+                appState.peer.on('error', (err) => {
+                    console.error('PeerJS error:', err);
+                    showAlert('เกิดข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message, 'error');
+                });
+
+            } catch (error) {
+                console.error('Failed to initialize peer connection:', error);
+                showAlert('Initialization Error', 'Failed to initialize connection: ' + error.message, 'error');
+            }
+        }
+
+        function joinRoom() {
+            const roomId = document.getElementById('roomId').value.trim();
+            const playerName = document.getElementById('playerName').value.trim();
+            
+            if (!roomId) {
+                showAlert('เกิดข้อผิดพลาด', 'กรุณากรอกรหัสห้อง', 'error');
+                return;
+            }
+            
+            if (!playerName) {
+                showAlert('เกิดข้อผิดพลาด', 'กรุณากรอกชื่อผู้เล่น', 'error');
+                return;
+            }
+            
+            appState.playerName = playerName;
+            
+            Swal.fire({
+                title: 'กำลังเชื่อมต่อ...',
+                html: 'กรุณารอสักครู่',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            
+            const conn = appState.peer.connect(roomId);
+            appState.hostConnection = conn;
+            
+            conn.on('open', () => {
+                Swal.close();
+                document.getElementById('joinArea').style.display = 'none';
+                document.getElementById('playerWaitingArea').style.display = 'block';
+                document.getElementById('playerGameArea').style.display = 'none';
+                
+                conn.send({
+                    type: 'playerName',
+                    name: playerName
+                });
+            });
+            
+            conn.on('data', (data) => handleData(roomId, data));
+            conn.on('close', () => {
+                showAlert('แจ้งเตือน', 'ผู้จัดเกมปิดห้องแล้ว', 'info').then(() => {
+                    renderHomeScreen();
+                });
+            });
+            
+            conn.on('error', (err) => {
+                Swal.close();
+                showAlert('เกิดข้อผิดพลาด', 'เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message, 'error');
+            });
+        }
+
+        function handleData(from, data) {
+            if (appState.role === 'host') {
+                if (data.type === 'answer') {
+                    handlePlayerAnswer(from, data.answer, data.questionIndex, data.timestamp);
+                } else if (data.type === 'playerName') {
+                    updatePlayerName(from, data.name);
+                }
+            } else if (appState.role === 'player') {
+                if (data.type === 'gameData') {
+                    handleGameData(data.data, data.leaderboard);
+                } else if (data.type === 'nextQuestion') {
+                    handleNextQuestion(data.currentQuestion);
+                } else if (data.type === 'showResults') {
+                    showPlayerResults(data.score, data.rank);
+                } else if (data.type === 'answerFeedback') {
+                    showAnswerFeedback(data.isCorrect, data.score);
+                } else if (data.type === 'timeUpdate') {
+                    updateTimer(data.timeLeft);
+                } else if (data.type === 'showAnswer') {
+                    handleShowAnswer(data.correctAnswer);
+                } else if (data.type === 'leaderboardUpdate') {
+                    updatePlayerLeaderboard(data.leaderboard);
+                } else if (data.type === 'quizRestarted') {
+                    handleQuizRestarted();
+                }
+            }
+        }
+
+        function handleQuizRestarted() {
+            document.getElementById('playerGameArea').style.display = 'none';
+            document.getElementById('playerAnswerSubmitted').style.display = 'none';
+            document.getElementById('playerResults').style.display = 'none';
+            document.getElementById('playerWaitingArea').style.display = 'block';
+            
+            appState.playerScore = 0;
+            appState.answerSubmitted = false;
+            appState.helpUsed = false;
+        }
+
+        function sendToPlayer(playerId, data) {
+            if (appState.connections[playerId]) {
+                appState.connections[playerId].send(data);
+            }
+        }
+
+        function broadcast(data) {
+            Object.keys(appState.connections).forEach(playerId => {
+                sendToPlayer(playerId, data);
+            });
+        }
+
+        function addQuestion() {
+            appState.quizData.questions.push({
+                question: '',
+                options: ['', '', '', ''],
+                correctAnswer: 0
+            });
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+            
+            if (appState.quizData.questions.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">ยังไม่มีคำถาม กดปุ่ม "เพิ่มคำถาม" เพื่อเริ่มต้น</div>';
+                return;
+            }
+            
+            appState.quizData.questions.forEach((q, qIndex) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'card mb-3';
+                questionDiv.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title mb-0">คำถาม #${qIndex + 1}</h5>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeQuestion(${qIndex})">
+                                <i class="fas fa-trash me-1"></i> ลบ
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">คำถาม:</label>
+                            <input type="text" class="form-control question-input" 
+                                   data-qindex="${qIndex}" data-field="question" 
+                                   value="${q.question}" placeholder="กรอกคำถาม">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ตัวเลือก:</label>
+                            ${q.options.map((opt, optIndex) => `
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">
+                                        <input class="form-check-input correct-answer" 
+                                               type="radio" name="correct-${qIndex}" 
+                                               value="${optIndex}" ${q.correctAnswer === optIndex ? 'checked' : ''}
+                                               data-qindex="${qIndex}">
+                                    </span>
+                                    <input type="text" class="form-control option-input" 
+                                           data-qindex="${qIndex}" data-optindex="${optIndex}" 
+                                           value="${opt}" placeholder="ตัวเลือก ${optIndex + 1}">
+                                    ${q.correctAnswer === optIndex ? 
+                                      '<span class="input-group-text correct-answer-label">คำตอบที่ถูกต้อง</span>' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(questionDiv);
+            });
+
+            document.querySelectorAll('.question-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const qIndex = parseInt(e.target.dataset.qindex);
+                    appState.quizData.questions[qIndex].question = e.target.value;
+                });
+            });
+            
+            document.querySelectorAll('.option-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const qIndex = parseInt(e.target.dataset.qindex);
+                    const optIndex = parseInt(e.target.dataset.optindex);
+                    appState.quizData.questions[qIndex].options[optIndex] = e.target.value;
+                });
+            });
+            
+            document.querySelectorAll('.correct-answer').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const qIndex = parseInt(e.target.dataset.qindex);
+                    appState.quizData.questions[qIndex].correctAnswer = parseInt(e.target.value);
+                    
+                    const inputGroup = e.target.closest('.input-group');
+                    const allInputGroups = e.target.closest('.card-body').querySelectorAll('.input-group');
+                    
+                    allInputGroups.forEach(group => {
+                        const label = group.querySelector('.input-group-text:last-child');
+                        if (label && label.classList.contains('correct-answer-label')) {
+                            label.remove();
+                        }
+                    });
+                    
+                    inputGroup.insertAdjacentHTML('beforeend', 
+                        '<span class="input-group-text correct-answer-label">คำตอบที่ถูกต้อง</span>');
+                });
+            });
+            
+            addImportExportToHostUI();
+        }
+
+        function startQuiz() {
+            if (appState.quizData.questions.length === 0) {
+                showAlert('เกิดข้อผิดพลาด', 'กรุณาเพิ่มคำถามก่อนเริ่มเกม', 'error');
+                return;
+            }
+            
+            for (let i = 0; i < appState.quizData.questions.length; i++) {
+                const q = appState.quizData.questions[i];
+                if (!q.question.trim()) {
+                    showAlert('เกิดข้อผิดพลาด', `กรุณากรอกคำถามสำหรับคำถาม #${i + 1}`, 'error');
+                    return;
+                }
+                
+                for (let j = 0; j < q.options.length; j++) {
+                    if (!q.options[j].trim()) {
+                        showAlert('เกิดข้อผิดพลาด', `กรุณากรอกตัวเลือก ${j + 1} สำหรับคำถาม #${i + 1}`, 'error');
+                        return;
+                    }
+                }
+            }
+            
+            const timeInput = document.getElementById('timePerQuestion');
+            appState.quizData.timePerQuestion = parseInt(timeInput.value) || 30;
+            
+            document.getElementById('quizSetupArea').style.display = 'none';
+            document.getElementById('gameQuestionArea').style.display = 'block';
+            
+            appState.quizData.currentQuestion = 0;
+            appState.quizData.showAnswer = false;
+            
+            startTimer();
+            showCurrentQuestion();
+            
+            broadcast({
+                type: 'gameData',
+                data: appState.quizData,
+                leaderboard: getSortedPlayers()
+            });
+            
+            showAlert('เริ่มเกมแล้ว!', 'เกมได้เริ่มต้นขึ้นแล้ว', 'success');
+            
+            startLeaderboardUpdates();
+        }
+
+        function showCurrentQuestion() {
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            document.getElementById('currentQuestionText').textContent = currentQ.question;
+            
+            const optionsContainer = document.getElementById('questionOptions');
+            optionsContainer.innerHTML = '';
+            
+            currentQ.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'mb-2';
+                optionDiv.innerHTML = `
+                    <div class="form-control">${String.fromCharCode(65 + index)}. ${option}</div>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            Object.keys(appState.players).forEach(playerId => {
+                appState.players[playerId].answered = false;
+                appState.players[playerId].currentAnswer = null;
+            });
+            
+            document.getElementById('showAnswerBtn').disabled = false;
+            document.getElementById('nextQuestionBtn').disabled = true;
+            
+            document.getElementById('totalPlayers').textContent = Object.keys(appState.players).length;
+            document.getElementById('answeredCount').textContent = '0';
+            
+            updateAnswerChart();
+            updatePlayersList();
+            recordLeaderboardHistory();
+        }
+
+        function showAnswer() {
+            appState.quizData.showAnswer = true;
+            document.getElementById('showAnswerBtn').disabled = true;
+            document.getElementById('nextQuestionBtn').disabled = false;
+            
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            const correctAnswer = currentQ.correctAnswer;
+            
+            document.querySelectorAll('#questionOptions .form-control').forEach((option, index) => {
+                if (index === correctAnswer) {
+                    option.classList.add('correct-answer-label');
+                }
+            });
+            
+            Object.keys(appState.players).forEach(playerId => {
+                const player = appState.players[playerId];
+                if (player.currentAnswer !== null) {
+                    const isCorrect = player.currentAnswer === correctAnswer;
+                    const points = isCorrect ? appState.timeLeft : 0;
+                    
+                    sendToPlayer(playerId, {
+                        type: 'answerFeedback',
+                        isCorrect: isCorrect,
+                        score: player.score + points
+                    });
+                    
+                    player.score += points;
+                    player.answers[appState.quizData.currentQuestion] = {
+                        answer: player.currentAnswer,
+                        isCorrect: isCorrect,
+                        points: points,
+                        timestamp: player.answers[appState.quizData.currentQuestion]?.timestamp || Date.now()
+                    };
+                }
+            });
+            
+            broadcast({
+                type: 'showAnswer',
+                correctAnswer: correctAnswer
+            });
+            
+            updatePlayersList();
+            broadcastLeaderboardUpdate();
+        }
+
+        function nextQuestion() {
+            appState.quizData.currentQuestion++;
+            appState.quizData.showAnswer = false;
+            
+            if (appState.quizData.currentQuestion < appState.quizData.questions.length) {
+                resetTimer();
+                showCurrentQuestion();
+                
+                broadcast({
+                    type: 'nextQuestion',
+                    currentQuestion: appState.quizData.currentQuestion
+                });
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            stopTimer();
+            stopLeaderboardUpdates();
+            
+            const sortedPlayers = getSortedPlayers();
+            
+            sortedPlayers.forEach((player, index) => {
+                sendToPlayer(player.id, {
+                    type: 'showResults',
+                    score: player.score,
+                    rank: index + 1
+                });
+            });
+            
+            let winnerHTML = '<h4 class="mb-3">ผู้ชนะ</h4><div class="text-center">';
+            
+            if (sortedPlayers.length > 0) {
+                winnerHTML += `
+                    <div class="winner-card mb-3">
+                        <div class="rank-1 mx-auto mb-2" style="width: 60px; height: 60px; font-size: 1.5rem;">1</div>
+                        <h3>${sortedPlayers[0].name}</h3>
+                        <div class="display-5 text-warning">${sortedPlayers[0].score} คะแนน</div>
+                    </div>
+                `;
+                
+                if (sortedPlayers.length > 1) {
+                    winnerHTML += '<h5 class="mt-4">อันดับรอง</h5><div class="d-flex justify-content-center gap-3">';
+                    
+                    if (sortedPlayers.length > 1) {
+                        winnerHTML += `
+                            <div class="text-center">
+                                <div class="rank-2 mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.2rem;">2</div>
+                                <div>${sortedPlayers[1].name}</div>
+                                <div class="text-secondary">${sortedPlayers[1].score} คะแนน</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (sortedPlayers.length > 2) {
+                        winnerHTML += `
+                            <div class="text-center">
+                                <div class="rank-3 mx-auto mb-2" style="width: 50px; height: 50px; font-size: 1.2rem;">3</div>
+                                <div>${sortedPlayers[2].name}</div>
+                                <div class="text-danger">${sortedPlayers[2].score} คะแนน</div>
+                            </div>
+                        `;
+                    }
+                    
+                    winnerHTML += '</div>';
+                }
+            }
+            
+            winnerHTML += '</div>';
+            
+            showAlert('เกมจบแล้ว!', winnerHTML, 'success', 'ปิด');
+        }
+
+        function startTimer() {
+            appState.timeLeft = appState.quizData.timePerQuestion;
+            updateTimerDisplay();
+            
+            appState.timer = setInterval(() => {
+                appState.timeLeft--;
+                updateTimerDisplay();
+                
+                broadcast({
+                    type: 'timeUpdate',
+                    timeLeft: appState.timeLeft
+                });
+                
+                if (appState.timeLeft <= 0) {
+                    stopTimer();
+                    if (!appState.quizData.showAnswer) {
+                        showAnswer();
+                    }
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            stopTimer();
+            startTimer();
+        }
+
+        function stopTimer() {
+            if (appState.timer) {
+                clearInterval(appState.timer);
+                appState.timer = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = appState.timeLeft;
+            
+            const timerElement = document.getElementById('timer');
+            if (appState.timeLeft <= 10) {
+                timerElement.style.color = 'var(--danger-color)';
+            } else {
+                timerElement.style.color = 'var(--primary-color)';
+            }
+        }
+
+        function updateAnswerChart() {
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            const ctx = document.getElementById('answerChart').getContext('2d');
+            
+            if (appState.answerChart) {
+                appState.answerChart.destroy();
+            }
+            
+            const answerCounts = [0, 0, 0, 0];
+            Object.values(appState.players).forEach(player => {
+                if (player.currentAnswer !== null) {
+                    answerCounts[player.currentAnswer]++;
+                }
+            });
+            
+            const labels = ['A', 'B', 'C', 'D'];
+            
+            appState.answerChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'จำนวนผู้ตอบ',
+                        data: answerCounts,
+                        backgroundColor: labels.map((_, index) => 
+                            index === currentQ.correctAnswer && appState.quizData.showAnswer ? 
+                            'rgba(0, 184, 148, 0.7)' : 'rgba(108, 92, 231, 0.7)'
+                        ),
+                        borderColor: labels.map((_, index) => 
+                            index === currentQ.correctAnswer && appState.quizData.showAnswer ? 
+                            'rgba(0, 184, 148, 1)' : 'rgba(108, 92, 231, 1)'
+                        ),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function addPlayer(playerId) {
+            if (!appState.players[playerId]) {
+                appState.players[playerId] = {
+                    id: playerId,
+                    name: `ผู้เล่น ${Object.keys(appState.players).length + 1}`,
+                    answers: {},
+                    answered: false,
+                    currentAnswer: null,
+                    score: 0,
+                    badges: [],
+                    fastestAnswer: 0,
+                    correctStreak: 0,
+                    maxStreak: 0,
+                    isCheating: false
+                };
+                updatePlayersList();
+            }
+        }
+
+        function updatePlayerName(playerId, name) {
+            if (appState.players[playerId]) {
+                appState.players[playerId].name = name;
+                updatePlayersList();
+            }
+        }
+
+        function removePlayer(playerId) {
+            delete appState.players[playerId];
+            updatePlayersList();
+        }
+
+        function getSortedPlayers() {
+            return Object.values(appState.players).sort((a, b) => b.score - a.score);
+        }
+
+        function updatePlayersList() {
+            const playersList = document.getElementById('players');
+            playersList.innerHTML = '';
+            
+            if (Object.keys(appState.players).length === 0) {
+                playersList.innerHTML = '<div class="player-item">ยังไม่มีผู้เล่นเข้าร่วม</div>';
+                return;
+            }
+            
+            const sortedPlayers = getSortedPlayers();
+            
+            sortedPlayers.forEach((player, index) => {
+                const playerItem = document.createElement('div');
+                playerItem.className = `player-item animate__animated animate__fadeIn ${player.isCheating ? 'cheat-detected' : ''}`;
+                playerItem.onclick = () => showPlayerDetails(player.id);
+                
+                let rankClass = 'rank-other';
+                if (index === 0) rankClass = 'rank-1';
+                else if (index === 1) rankClass = 'rank-2';
+                else if (index === 2) rankClass = 'rank-3';
+                
+                const badges = [];
+                if (player.fastestAnswer > 0) {
+                    badges.push(`<span class="badge badge-fastest"><i class="fas fa-bolt"></i> เร็วสุด</span>`);
+                }
+                if (player.maxStreak >= 3) {
+                    badges.push(`<span class="badge badge-streak"><i class="fas fa-fire"></i> ${player.maxStreak} ติด</span>`);
+                }
+                if (Object.values(player.answers).filter(a => a.isCorrect).length === appState.quizData.questions.length) {
+                    badges.push(`<span class="badge badge-perfect"><i class="fas fa-star"></i> ถูกทุกข้อ</span>`);
+                }
+                if (player.isCheating) {
+                    badges.push(`<span class="badge bg-danger"><i class="fas fa-user-secret"></i> โกง</span>`);
+                }
+                
+                playerItem.innerHTML = `
+                    <div class="player-rank ${rankClass}">${index + 1}</div>
+                    <div class="player-info">
+                        <div class="player-name">${player.name}</div>
+                        <div class="player-stats">
+                            <span>ตอบแล้ว ${Object.keys(player.answers).length}/${appState.quizData.questions.length} ข้อ</span>
+                            <div class="player-badges">${badges.join('')}</div>
+                        </div>
+                    </div>
+                    <div class="player-score">${player.score} คะแนน</div>
+                `;
+                
+                playersList.appendChild(playerItem);
+            });
+            
+            const answeredCount = Object.values(appState.players).filter(p => p.answered).length;
+            document.getElementById('answeredCount').textContent = answeredCount;
+            
+            if (appState.quizData.currentQuestion >= 0 && appState.quizData.questions.length > 0) {
+                updateAnswerChart();
+                updateHistoryChart();
+            }
+        }
+
+        function updateHistoryChart() {
+            const ctx = document.getElementById('historyChart').getContext('2d');
+            const sortedPlayers = getSortedPlayers().slice(0, 5);
+            
+            if (appState.historyChart) {
+                appState.historyChart.destroy();
+            }
+            
+            const labels = sortedPlayers.map(p => p.name);
+            const data = sortedPlayers.map(p => p.score);
+            const backgroundColors = sortedPlayers.map((_, i) => {
+                if (i === 0) return 'rgba(255, 215, 0, 0.7)';
+                if (i === 1) return 'rgba(192, 192, 192, 0.7)';
+                if (i === 2) return 'rgba(205, 127, 50, 0.7)';
+                return 'rgba(108, 92, 231, 0.7)';
+            });
+            
+            appState.historyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'คะแนน',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function recordLeaderboardHistory() {
+            const currentQuestion = appState.quizData.currentQuestion;
+            const snapshot = {
+                question: currentQuestion,
+                players: {}
+            };
+            
+            Object.keys(appState.players).forEach(playerId => {
+                const player = appState.players[playerId];
+                snapshot.players[playerId] = {
+                    name: player.name,
+                    score: player.score,
+                    rank: getPlayerRank(playerId)
+                };
+            });
+            
+            appState.leaderboardHistory.push(snapshot);
+        }
+
+        function getPlayerRank(playerId) {
+            const sortedPlayers = getSortedPlayers();
+            return sortedPlayers.findIndex(p => p.id === playerId) + 1;
+        }
+
+function handlePlayerAnswer(playerId, answer, questionIndex, timestamp) {
+  const player = appState.players[playerId];
+  if (!player) return;
+
+  const currentQ = appState.quizData.questions[questionIndex];
+  const isCorrect = answer === currentQ.correctAnswer;
+  const now = Date.now();
+  const answerTime = now - timestamp;
+
+  // คำนวณเวลาอ่านที่คาดหวัง
+  const questionLength = currentQ.question.length + currentQ.options.join('').length;
+  const expectedReadingTime = questionLength * appState.antiCheat.readingTimePerCharacter;
+  
+  // ตรวจสอบเวลาตอบ
+  const isTooFast = answerTime < Math.max(expectedReadingTime, appState.antiCheat.answerTimeThreshold);
+  
+  // ตรวจสอบการเปลี่ยนตัวเลือก
+  const optionChanges = player.optionChanges?.[questionIndex] || 0;
+  const noOptionChange = optionChanges < appState.antiCheat.optionChangeThreshold;
+
+  // บันทึกพฤติกรรม
+  if (!appState.antiCheat.suspiciousPatterns[playerId]) {
+    appState.antiCheat.suspiciousPatterns[playerId] = [];
+  }
+  
+  appState.antiCheat.suspiciousPatterns[playerId].push({
+    questionIndex,
+    answer,
+    isCorrect,
+    answerTime,
+    expectedReadingTime,
+    optionChanges,
+    timestamp: now
+  });
+
+  // ตรวจสอบพฤติกรรมน่าสงสัย
+  let suspiciousScore = 0;
+  if (isTooFast) suspiciousScore += 2;
+  if (noOptionChange) suspiciousScore += 1;
+  if (isCorrect && isTooFast) suspiciousScore += 3;
+
+  // บันทึกคะแนนความน่าสงสัย
+  if (!appState.antiCheat.cheatingDetected[playerId]) {
+    appState.antiCheat.cheatingDetected[playerId] = 0;
+  }
+  appState.antiCheat.cheatingDetected[playerId] += suspiciousScore;
+
+  // ถ้าคะแนนเกินเกณฑ์ให้ทำเครื่องหมายว่าโกง
+  if (appState.antiCheat.cheatingDetected[playerId] > 5) {
+    player.isCheating = true;
+    showAlert('แจ้งเตือน', `ตรวจพบพฤติกรรมน่าสงสัยจาก ${player.name}`, 'warning');
+    player.score = Math.max(0, player.score - 10);
+  }
+
+  // ประมวลผลคำตอบ
+  const points = isCorrect ? appState.timeLeft : 0;
+  
+  player.answered = true;
+  player.currentAnswer = answer;
+  player.answers[questionIndex] = {
+    answer: answer,
+    isCorrect: isCorrect,
+    points: points,
+    timestamp: timestamp
+  };
+  
+  const oldScore = player.score;
+  player.score = Object.values(player.answers).reduce((total, answer) => total + answer.points, 0);
+  
+  updatePlayersList();
+  broadcastLeaderboardUpdate();
+  
+  if (player.score !== oldScore) {
+    const rank = getPlayerRank(playerId);
+    const playerElement = document.querySelector(`.player-item:nth-child(${rank}) .player-score`);
+    if (playerElement) {
+      const change = player.score - oldScore;
+      const changeElement = document.createElement('span');
+      changeElement.className = 'score-change';
+      changeElement.textContent = (change > 0 ? '+' : '') + change;
+      changeElement.style.color = change > 0 ? 'var(--success-color)' : 'var(--danger-color)';
+      playerElement.appendChild(changeElement);
+      
+      setTimeout(() => {
+        changeElement.remove();
+      }, 1500);
+    }
+  }
+}
+
+        function showPlayerDetails(playerId) {
+            const player = appState.players[playerId];
+            if (!player) return;
+            
+            const rank = getPlayerRank(playerId);
+            let rankClass = 'rank-other';
+            if (rank === 1) rankClass = 'rank-1';
+            else if (rank === 2) rankClass = 'rank-2';
+            else if (rank === 3) rankClass = 'rank-3';
+            
+            let historyHTML = '';
+            appState.quizData.questions.forEach((q, index) => {
+                const answer = player.answers[index];
+                if (answer) {
+                    const optionLetter = String.fromCharCode(65 + answer.answer);
+                    const correctOptionLetter = String.fromCharCode(65 + q.correctAnswer);
+                    
+                    historyHTML += `
+                        <div class="game-history-item">
+                            <div class="game-history-question">คำถาม #${index + 1}: ${q.question}</div>
+                            <div class="game-history-answer">
+                                <span>คำตอบของคุณ: <span class="${answer.isCorrect ? 'game-history-correct' : 'game-history-wrong'}">${optionLetter}. ${q.options[answer.answer]}</span></span>
+                                <span>ได้ ${answer.points} คะแนน</span>
+                            </div>
+                            ${!answer.isCorrect ? `
+                            <div class="game-history-answer">คำตอบที่ถูกต้อง: <span class="game-history-correct">${correctOptionLetter}. ${q.options[q.correctAnswer]}</span></div>
+                            ` : ''}
+                            ${player.isCheating ? `<div class="text-danger small"><i class="fas fa-exclamation-triangle"></i> ตรวจพบพฤติกรรมน่าสงสัย</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    historyHTML += `
+                        <div class="game-history-item">
+                            <div class="game-history-question">คำถาม #${index + 1}: ${q.question}</div>
+                            <div class="game-history-answer text-muted">ไม่ได้ตอบคำถามนี้</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            document.getElementById('playerDetailsTitle').textContent = `รายละเอียด: ${player.name}`;
+            document.getElementById('playerDetailsContent').innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="player-rank ${rankClass} mx-auto mb-2" style="width: 60px; height: 60px; font-size: 1.5rem;">${rank}</div>
+                    <h4>${player.name}</h4>
+                    <div class="display-5 text-primary">${player.score} คะแนน</div>
+                    ${player.isCheating ? `<div class="text-danger mt-2"><i class="fas fa-user-secret"></i> ตรวจพบพฤติกรรมน่าสงสัย</div>` : ''}
+                </div>
+                
+                <h5 class="mt-4 mb-3">ประวัติการตอบคำถาม</h5>
+                <div class="game-history">
+                    ${historyHTML}
+                </div>
+            `;
+            
+            document.getElementById('playerDetails').classList.add('show');
+        }
+
+        function hidePlayerDetails() {
+            document.getElementById('playerDetails').classList.remove('show');
+        }
+
+        function refreshLeaderboard() {
+            updatePlayersList();
+            broadcastLeaderboardUpdate();
+            showAlert('สำเร็จ', 'อัพเดตข้อมูล Leaderboard แล้ว', 'success');
+        }
+
+        function showLeaderboardFullscreen() {
+            const leaderboardWindow = window.open('', '_blank', 'width=600,height=800');
+            
+            const players = getSortedPlayers();
+            const leaderboardHTML = generateLeaderboardHTML(players);
+            
+            leaderboardWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Leaderboard</title>
+                    <style>
+                        .player-item { display: flex; padding: 10px; margin: 5px; background: #fff; }
+                        .player-rank { width: 30px; text-align: center; }
+                        .rank-1 { color: gold; }
+                        .rank-2 { color: silver; }
+                        .rank-3 { color: #cd7f32; }
+                    </style>
+                </head>
+                <body>
+                    <div id="leaderboard">${leaderboardHTML}</div>
+                </body>
+                </html>
+            `);
+        }
+
+        function generateLeaderboardHTML(players) {
+            return players.map((player, index) => `
+                <div class="player-item">
+                    <div class="player-rank ${getRankClass(index + 1)}">${index + 1}</div>
+                    <div class="player-name">${escapeHTML(player.name)}</div>
+                    <div class="player-score">${player.score}</div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function handleGameData(data, leaderboard) {
+            appState.quizData = data;
+            appState.playerScore = 0;
+            appState.answerSubmitted = false;
+            appState.helpUsed = false;
+            
+            document.getElementById('playerWaitingArea').style.display = 'none';
+            document.getElementById('playerGameArea').style.display = 'block';
+            document.getElementById('playerAnswerSubmitted').style.display = 'none';
+            document.getElementById('helpButton').style.display = 'flex';
+            
+            if (leaderboard) {
+                updatePlayerLeaderboard(leaderboard);
+            }
+            
+            renderPlayerQuestion();
+        }
+
+        function handleNextQuestion(currentQuestion) {
+            appState.quizData.currentQuestion = currentQuestion;
+            appState.answerSubmitted = false;
+            appState.helpUsed = false;
+            
+            document.getElementById('playerAnswerSubmitted').style.display = 'none';
+            document.getElementById('playerGameArea').style.display = 'block';
+            document.getElementById('helpButton').style.display = 'flex';
+            
+            renderPlayerQuestion();
+        }
+
+        function updateTimer(timeLeft) {
+            appState.timeLeft = timeLeft;
+            document.getElementById('playerTimer').textContent = timeLeft;
+            
+            const timerElement = document.getElementById('playerTimer');
+            if (timeLeft <= 10) {
+                timerElement.style.color = 'var(--danger-color)';
+            } else {
+                timerElement.style.color = 'var(--primary-color)';
+            }
+        }
+
+        function renderPlayerQuestion() {
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            document.getElementById('playerQuestionText').textContent = 
+                `คำถาม #${appState.quizData.currentQuestion + 1}: ${currentQ.question}`;
+            
+            const optionsDiv = document.getElementById('playerOptions');
+            optionsDiv.innerHTML = '';
+            
+            currentQ.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'form-check mb-2';
+                optionDiv.innerHTML = `
+                    <input class="form-check-input" type="radio" name="playerAnswer" 
+                           id="option${index}" value="${index}">
+                    <label class="form-check-label" for="option${index}">
+                        ${String.fromCharCode(65 + index)}. ${option}
+                    </label>
+                `;
+                optionsDiv.appendChild(optionDiv);
+            });
+            
+            document.querySelectorAll('input[name="playerAnswer"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    document.getElementById('submitAnswerBtn').disabled = false;
+                });
+            });
+            
+            document.getElementById('submitAnswerBtn').onclick = submitAnswer;
+            document.getElementById('submitAnswerBtn').disabled = true;
+        }
+
+        function submitAnswer() {
+            const selectedOption = document.querySelector('input[name="playerAnswer"]:checked');
+            if (!selectedOption || appState.answerSubmitted) return;
+            
+            const answer = parseInt(selectedOption.value);
+            appState.answerSubmitted = true;
+            
+            appState.hostConnection.send({
+                type: 'answer',
+                answer: answer,
+                questionIndex: appState.quizData.currentQuestion,
+                timestamp: Date.now()
+            });
+            
+            document.getElementById('playerGameArea').style.display = 'none';
+            document.getElementById('playerAnswerSubmitted').style.display = 'block';
+            document.getElementById('helpButton').style.display = 'none';
+        }
+
+        function useHelp() {
+            if (appState.helpUsed || appState.answerSubmitted) return;
+            
+            const options = Array.from(document.querySelectorAll('#playerOptions input[name="playerAnswer"]'));
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            
+            const wrongOptions = options.filter(opt => {
+                const value = parseInt(opt.value);
+                return value !== currentQ.correctAnswer;
+            });
+            
+            const optionsToHide = shuffleArray([...wrongOptions]).slice(0, 2);
+            
+            optionsToHide.forEach(opt => {
+                opt.disabled = true;
+                opt.nextElementSibling.style.opacity = '0.3';
+                opt.nextElementSibling.style.textDecoration = 'line-through';
+            });
+            
+            appState.helpUsed = true;
+            document.getElementById('helpButton').style.display = 'none';
+            
+            const helpButton = document.getElementById('helpButton');
+            helpButton.innerHTML = '<i class="fas fa-check"></i>';
+            helpButton.style.backgroundColor = 'var(--secondary-color)';
+        }
+
+        function handleShowAnswer(correctAnswer) {
+            const currentQ = appState.quizData.questions[appState.quizData.currentQuestion];
+            const selectedOption = document.querySelector('input[name="playerAnswer"]:checked');
+            const playerAnswer = selectedOption ? parseInt(selectedOption.value) : null;
+            
+            let resultHTML = '';
+            
+            if (playerAnswer !== null) {
+                const isCorrect = playerAnswer === correctAnswer;
+                const points = isCorrect ? appState.timeLeft : 0;
+                
+                resultHTML = `
+                    <div class="answer-result">
+                        <h4 class="answer-status ${isCorrect ? 'text-success' : 'text-danger'}">
+                            ${isCorrect ? '<i class="fas fa-check-circle"></i> ตอบถูกต้อง' : '<i class="fas fa-times-circle"></i> ตอบผิด'}
+                        </h4>
+                        <div class="result-details">
+                            <div class="mb-2"><strong>คำถาม:</strong> ${currentQ.question}</div>
+                            <div class="mb-2"><strong>คุณตอบ:</strong> <span class="${isCorrect ? 'text-success' : 'text-danger'}">
+                                ${String.fromCharCode(65 + playerAnswer)}. ${currentQ.options[playerAnswer]}
+                            </span></div>
+                            ${!isCorrect ? `
+                            <div class="mb-2"><strong>คำตอบที่ถูกต้อง:</strong> <span class="text-success">
+                                ${String.fromCharCode(65 + correctAnswer)}. ${currentQ.options[correctAnswer]}
+                            </span></div>
+                            ` : ''}
+                            <div class="mb-2"><strong>คะแนนที่ได้:</strong> <span class="text-primary">${points} คะแนน</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">กำลังโหลด...</span>
+                        </div>
+                        <p class="mt-2">คุณไม่ได้ตอบคำถามนี้</p>
+                    </div>
+                `;
+            }
+            
+            // เพิ่มส่วนแสดงปุ่มรอข้อถัดไป (ถ้ามี)
+            const hasNextQuestion = appState.quizData.currentQuestion < appState.quizData.questions.length - 1;
+            
+            if (hasNextQuestion) {
+                resultHTML += `
+                    <div class="text-center mt-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">กำลังโหลด...</span>
+                        </div>
+                        <p class="mt-2">รอข้อถัดไป...</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('playerAnswerSubmitted').innerHTML = resultHTML;
+            document.getElementById('playerGameArea').style.display = 'none';
+            document.getElementById('playerAnswerSubmitted').style.display = 'block';
+        }
+
+        function showPlayerResults(score, rank) {
+            appState.playerScore = score;
+            
+            document.getElementById('playerGameArea').style.display = 'none';
+            document.getElementById('playerAnswerSubmitted').style.display = 'none';
+            document.getElementById('playerResults').style.display = 'block';
+            document.getElementById('playerScore').textContent = score;
+            
+            let rankHTML = '';
+            if (rank === 1) {
+                rankHTML = `<div class="text-warning"><i class="fas fa-trophy"></i> อันดับที่ ${rank} - แชมป์!</div>`;
+            } else if (rank === 2) {
+                rankHTML = `<div class="text-secondary"><i class="fas fa-award"></i> อันดับที่ ${rank}</div>`;
+            } else if (rank === 3) {
+                rankHTML = `<div class="text-danger"><i class="fas fa-award"></i> อันดับที่ ${rank}</div>`;
+            } else {
+                rankHTML = `<div class="text-muted">อันดับที่ ${rank}</div>`;
+            }
+            
+            document.getElementById('playerRank').innerHTML = rankHTML;
+            
+            if (rank <= 3) {
+                createConfetti();
+            }
+        }
+
+        function showAnswerFeedback(isCorrect, score) {
+            appState.playerScore = score;
+            document.getElementById('playerScore').textContent = score;
+            
+            if (isCorrect) {
+                createConfetti();
+            }
+        }
+
+        function updatePlayerLeaderboard(leaderboardData) {
+            const playerRank = leaderboardData.find(p => p.id === appState.peer.id);
+            if (playerRank) {
+                updatePlayerRank(playerRank.rank);
+            }
+        }
+
+        function updatePlayerRank(rank) {
+            const rankElement = document.getElementById('playerRank');
+            if (rankElement) {
+                if (rank === 1) {
+                    rankElement.innerHTML = `<div class="text-warning"><i class="fas fa-trophy"></i> อันดับที่ ${rank} - แชมป์!</div>`;
+                } else if (rank === 2) {
+                    rankElement.innerHTML = `<div class="text-secondary"><i class="fas fa-award"></i> อันดับที่ ${rank}</div>`;
+                } else if (rank === 3) {
+                    rankElement.innerHTML = `<div class="text-danger"><i class="fas fa-award"></i> อันดับที่ ${rank}</div>`;
+                } else {
+                    rankElement.innerHTML = `<div class="text-muted">อันดับที่ ${rank}</div>`;
+                }
+            }
+        }
+
+        function copyHostId() {
+            const hostId = document.getElementById('hostId').textContent;
+            navigator.clipboard.writeText(hostId);
+            
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+            
+            Toast.fire({
+                icon: 'success',
+                title: 'คัดลอกรหัสห้องเรียบร้อยแล้ว!'
+            });
+        }
+
+        function removeQuestion(index) {
+            showConfirm('ยืนยันการลบ', 'คุณแน่ใจหรือไม่ว่าต้องการลบคำถามนี้?', 'warning').then((result) => {
+                if (result.isConfirmed) {
+                    appState.quizData.questions.splice(index, 1);
+                    renderQuestions();
+                    
+                    if (appState.quizData.currentQuestion >= appState.quizData.questions.length) {
+                        appState.quizData.currentQuestion = Math.max(0, appState.quizData.questions.length - 1);
+                    }
+                    
+                    showAlert('สำเร็จ', 'ลบคำถามเรียบร้อยแล้ว', 'success');
+                }
+            });
+        }
+
+        function addImportExportToHostUI() {
+            if (document.getElementById('importExportArea')) return;
+            
+            const quizSetupArea = document.getElementById('quizSetupArea');
+            if (!quizSetupArea) return;
+            
+            const importExportHTML = `
+                <div class="import-export-area mt-4" id="importExportArea">
+                    <h5>นำเข้า/ส่งออกคำถาม</h5>
+                    <textarea id="importExportText" class="form-control mb-2" rows="5" placeholder="วางข้อมูล JSON ที่นี่..."></textarea>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-success" onclick="importQuestions()">
+                            <i class="fas fa-upload me-1"></i> นำเข้า
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="exportQuestions()">
+                            <i class="fas fa-download me-1"></i> ส่งออก
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            quizSetupArea.insertAdjacentHTML('beforeend', importExportHTML);
+        }
+
+        function importQuestions() {
+            const importText = document.getElementById('importExportText').value.trim();
+            if (!importText) return;
+            
+            try {
+                const importedData = JSON.parse(importText);
+                if (Array.isArray(importedData)) {
+                    appState.quizData.questions = importedData;
+                    renderQuestions();
+                    showAlert('สำเร็จ', `นำเข้าคำถามสำเร็จ ${importedData.length} ข้อ`, 'success');
+                } else {
+                    showAlert('เกิดข้อผิดพลาด', "รูปแบบข้อมูลไม่ถูกต้อง ต้องเป็น Array ของคำถาม", 'error');
+                }
+            } catch (e) {
+                showAlert('เกิดข้อผิดพลาด', "ข้อมูล JSON ไม่ถูกต้อง: " + e.message, 'error');
+            }
+        }
+
+        function exportQuestions() {
+            const questionsToExport = appState.quizData.questions.map(q => ({
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correctAnswer
+            }));
+            
+            const exportText = JSON.stringify(questionsToExport, null, 2);
+            document.getElementById('importExportText').value = exportText;
+            
+            navigator.clipboard.writeText(exportText);
+            
+            showAlert('สำเร็จ', `ส่งออกคำถามสำเร็จ ${questionsToExport.length} ข้อ และคัดลอกไปยังคลิปบอร์ดแล้ว`, 'success');
+        }
+
+        function startLeaderboardUpdates() {
+            if (appState.leaderboardUpdateInterval) {
+                clearInterval(appState.leaderboardUpdateInterval);
+            }
+            
+            appState.leaderboardUpdateInterval = setInterval(() => {
+                const now = Date.now();
+                if (now - appState.lastLeaderboardUpdate > 5000) { // Update every 5 seconds
+                    broadcastLeaderboardUpdate();
+                    appState.lastLeaderboardUpdate = now;
+                }
+            }, 1000);
+        }
+
+        function stopLeaderboardUpdates() {
+            if (appState.leaderboardUpdateInterval) {
+                clearInterval(appState.leaderboardUpdateInterval);
+                appState.leaderboardUpdateInterval = null;
+            }
+        }
+
+        function broadcastLeaderboardUpdate() {
+            const sortedPlayers = getSortedPlayers();
+            const leaderboardData = sortedPlayers.map((player, index) => ({
+                id: player.id,
+                name: player.name,
+                score: player.score,
+                rank: index + 1,
+                answered: player.answered || false
+            }));
+            
+            broadcast({
+                type: 'leaderboardUpdate',
+                leaderboard: leaderboardData
+            });
+            
+            // Update leaderboard subscribers
+            appState.leaderboardSubscribers.forEach(sub => {
+                if (!sub.window.closed) {
+                    sub.window.postMessage({
+                        type: 'updateLeaderboard',
+                        leaderboard: leaderboardData
+                    }, '*');
+                    sub.lastUpdate = Date.now();
+                }
+            });
+            
+            // Remove closed windows
+            appState.leaderboardSubscribers = appState.leaderboardSubscribers.filter(
+                sub => !sub.window.closed
+            );
+        }
+
+        function restartQuiz() {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการเริ่มเกมใหม่? การดำเนินการนี้จะรีเซ็ตทุกอย่าง')) {
+                appState.quizData.currentQuestion = 0;
+                appState.quizData.showAnswer = false;
+                appState.players = {};
+                
+                document.getElementById('quizSetupArea').style.display = 'block';
+                document.getElementById('gameQuestionArea').style.display = 'none';
+                
+                stopTimer();
+                stopLeaderboardUpdates();
+                
+                updatePlayersList();
+                renderQuestions();
+                
+                broadcast({
+                    type: 'quizRestarted'
+                });
+                
+                showAlert('สำเร็จ', 'เริ่มเกมใหม่เรียบร้อยแล้ว', 'success');
+            }
+        }
+
+        // ทำให้ฟังก์ชันสามารถเรียกใช้จาก HTML ได้
+        window.renderHostScreen = renderHostScreen;
+        window.renderPlayerScreen = renderPlayerScreen;
+        window.joinRoom = joinRoom;
+        window.addQuestion = addQuestion;
+        window.removeQuestion = removeQuestion;
+        window.startQuiz = startQuiz;
+        window.nextQuestion = nextQuestion;
+        window.showAnswer = showAnswer;
+        window.copyHostId = copyHostId;
+        window.showPlayerDetails = showPlayerDetails;
+        window.hidePlayerDetails = hidePlayerDetails;
+        window.refreshLeaderboard = refreshLeaderboard;
+        window.showLeaderboardFullscreen = showLeaderboardFullscreen;
+        window.importQuestions = importQuestions;
+        window.exportQuestions = exportQuestions;
+        window.useHelp = useHelp;
+        window.selectHostMode = selectHostMode;
+        window.renderRemoteControlScreen = renderRemoteControlScreen;
+        window.verifyControlCode = verifyControlCode;
+        window.sendControlCommand = sendControlCommand;
+        window.disconnectRemoteControl = disconnectRemoteControl;
+        window.copyControlCode = copyControlCode;
+        window.restartQuiz = restartQuiz;
+
+        // เริ่มต้นแอปพลิเคชันเมื่อโหลดหน้าเว็บ
+        window.onload = initApp;
+    </script>
 </body>
 </html>
